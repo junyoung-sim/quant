@@ -1,12 +1,15 @@
 COMPILER=g++
 VERSION=-std=c++11
 
-output: main.o node.o layer.o neural_network.o dqn.o
-	$(COMPILER) $(VERSION) main.o node.o layer.o neural_network.o dqn.o -o exec
+output: main.o data.o node.o layer.o neural_network.o dqn.o
+	$(COMPILER) $(VERSION) main.o data.o node.o layer.o neural_network.o dqn.o -o exec
 	rm *.o
 
 main.o: ./src/main.cpp
 	$(COMPILER) $(VERSION) -c ./src/main.cpp
+
+data.o: ./src/data.cpp
+	$(COMPILER) $(VERSION) -c ./src/data.cpp
 
 node.o: ./src/node.cpp
 	$(COMPILER) $(VERSION) -c ./src/node.cpp
