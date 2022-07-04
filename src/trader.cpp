@@ -5,16 +5,43 @@
 #include <fstream>
 
 #include "../lib/bar.hpp"
-#include "../lib/dqn.hpp"
+#include "../lib/trader.hpp"
 
-void DQN::sync() {
-    for(unsigned int l = 0; l < agent.num_of_layers(); l++)
-        for(unsigned int n = 0; n < agent.layer(l)->out_features(); n++)
-            for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++)
-                target.layer(l)->node(n)->set_weight(i, agent.layer(l)->node(n)->weight(i));
+bool Trader::sample_state(std::vector<double> &series, unsigned int t, unsigned int look_back, std::vector<double> &state) {
+    std::vector<double> price = {series.begin() + t, series.begin() + t + look_back};
+    std::vector<double> macd = moving_average_convergence_divergence(price);
+    std::vector<double> sosc = stochastic_oscillator(price, 14);
+    std::vector<double> rsi = relative_strength_index(price, 14);
+
+    std::vector<unsigned int> size = {static_cast<unsigned int>(price.size()),
+                                      static_cast<unsigned int>(macd.size()),
+                                      static_cast<unsigned int>(sosc.size()),
+                                      static_cast<unsigned int>(rsi.size())};
+    unsigned int min_size = *std::min_element(size.begin(), size.end());
+    std::vector<unsigned int>().swap(size);
+
+    price.erase(price.begin(), price.begin() + (price.size() - min_size));
+    macd.erase(macd.begin(), macd.begin() + (macd.size() - min_size));
+    sosc.erase(sosc.begin(), sosc.begin() + (sosc.size() - min_size));
+    rsi.erase(rsi.begin(), rsi.begin() + (rsi.size() - min_size));
+
+    standardize(price);
+    standardize(macd);
+
+    state.insert(state.end(), price.begin(), price.end());
+    state.insert(state.end(), macd.begin(), macd.end());
+    state.insert(state.end(), sosc.begin(), sosc.end());
+    state.insert(state.end(), rsi.begin(), rsi.end());
+
+    std::vector<double>().swap(price);
+    std::vector<double>().swap(macd);
+    std::vector<double>().swap(sosc);
+    std::vector<double>().swap(rsi);
+
+    return t + look_back == series.size(); // terminal state
 }
 
-unsigned int DQN::epsilon_greedy_policy(std::vector<double> &state, double EPSILON) {
+unsigned int Trader::epsilon_greedy_policy(std::vector<double> &state, double EPSILON) {
     unsigned int action;
     double explore = (double)rand() / RAND_MAX;
     // e-greedy policy
@@ -30,7 +57,78 @@ unsigned int DQN::epsilon_greedy_policy(std::vector<double> &state, double EPSIL
     return action;
 }
 
-void DQN::optimize(std::vector<std::vector<double>> &state, std::vector<std::vector<double>> &reward) {
+void Trader::sync() {
+    for(unsigned int l = 0; l < agent.num_of_layers(); l++)
+        for(unsigned int n = 0; n < agent.layer(l)->out_features(); n++)
+            for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++)
+                target.layer(l)->node(n)->set_weight(i, agent.layer(l)->node(n)->weight(i));
+}
+
+void Trader::optimize(std::vector<double> &series) {
+    // hyperparameters
+    double EPSILON_INIT = 0.90;
+    double EPSILON_MIN = 0.01;
+    double EPSILON_DECAY = 0.99;
+    double EPSILON = EPSILON_INIT;
+
+    double GAMMA = 0.50;
+
+    unsigned int MEMORY_CAPACITY = 10000;
+    std::vector<std::vector<double>> state_memory;
+    std::vector<unsigned int> action_memory;
+    std::vector<double> reward_memory;
+    std::vector<std::vector<double>> next_state_memory;
+
+    unsigned int ITERATION = 10;
+    unsigned int BATCH_SIZE = 64;
+    double ALPHA_INIT = 0.0001;
+    double ALPHA_MIN = 0.00001;
+    double ALPHA_DECAY = 0.99;
+    double ALPHA = ALPHA_INIT;
+
+    unsigned int SYNC_INTERVAL = 5000;
+
+    unsigned int LOOK_BACK = 60;
+    for(unsigned int t = 0; t <= series.size() - LOOK_BACK; t++) {
+        // sample state space
+        std::vector<double> state;
+        bool terminal = sample_state(series, t, LOOK_BACK, state);
+
+        // compute action given state space
+        double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * t / (series.size() - LOOK_BACK + 1);
+        EPSILON = EPSILON_INIT * pow(EPSILON_DECAY, epsilon_decay_exp);
+
+        unsigned int action = epsilon_greedy_policy(state, EPSILON); // LONG (0), HOLD (1), SHORT (2)
+
+        // observe reward
+        double diff = (series[t+LOOK_BACK] - series[t+LOOK_BACK-1]) * 100 / series[t+LOOK_BACK-1];
+        double reward;
+        if(action == LONG)
+            reward = diff;
+        else if(action == SHORT)
+            reward = -1.00 * diff;
+        else
+            reward = 0.00;
+
+        // update replay memory
+        state_memory.push_back(state);
+        action_memory.push_back(action);
+        reward_memory.push_back(reward);
+
+        if(!terminal) {
+            std::vector<double> next_state;
+            sample_state(series, t+1, LOOK_BACK, next_state);
+            next_state_memory.push_back(next_state);
+
+            std::vector<double>().swap(next_state);
+        }
+
+        std::vector<double>().swap(state);
+    }
+}
+
+/*
+void Trader::optimize(std::vector<std::vector<double>> &state, std::vector<std::vector<double>> &reward) {
     double EPSILON_INIT = 0.90;
     double EPSILON_MIN = 0.01;
     double EPSILON_DECAY = 0.99;
@@ -121,7 +219,7 @@ void DQN::optimize(std::vector<std::vector<double>> &state, std::vector<std::vec
             std::vector<double> performance = evaluate_agent(state, reward, GAMMA);
             double mean_loss = performance[0], mean_reward = performance[1];
 
-            progress_bar(frame, state.size(), "(frame=" + std::to_string(frame) + ") L = " + std::to_string(mean_loss) + ", R = " + std::to_string(mean_reward));
+            progress_bar(frame, state.size(), "frame=" + std::to_string(frame));
 
             std::ofstream out("./data/training_performance", std::ios::app);
             out << mean_loss << " " << mean_reward << "\n";
@@ -135,30 +233,4 @@ void DQN::optimize(std::vector<std::vector<double>> &state, std::vector<std::vec
 
     std::vector<unsigned int>().swap(action_memory);
 }
-
-std::vector<double> DQN::evaluate_agent(std::vector<std::vector<double>> &state, std::vector<std::vector<double>> &reward, double GAMMA) {
-    double mean_loss = 0.00, mean_reward = 0.00;
-    for(unsigned int frame = 0; frame < state.size(); frame++) {
-        std::vector<double> agent_q = agent.predict(state[frame]);
-        unsigned int action = std::max_element(agent_q.begin(), agent_q.end()) - agent_q.begin();
-
-        double expected_reward = reward[frame][action];
-        if(frame != state.size() - 1) {
-            std::vector<double> target_q = target.predict(state[frame+1]);
-            expected_reward += GAMMA * *std::max_element(target_q.begin(), target_q.end());
-
-            std::vector<double>().swap(target_q);
-        }
-
-        mean_loss += pow(expected_reward - agent_q[action], 2);
-        mean_reward += reward[frame][action];
-
-        std::vector<double>().swap(agent_q);
-    }
-
-    mean_loss /= state.size();
-    mean_reward /= state.size();
-
-    return std::vector<double>({mean_loss, mean_reward});
-}
-
+*/

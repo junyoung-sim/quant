@@ -1,8 +1,8 @@
 COMPILER=g++
 VERSION=-std=c++11
 
-output: main.o data.o node.o layer.o neural_network.o dqn.o
-	$(COMPILER) $(VERSION) main.o data.o node.o layer.o neural_network.o dqn.o -o exec
+output: main.o data.o node.o layer.o neural_network.o trader.o
+	$(COMPILER) $(VERSION) main.o data.o node.o layer.o neural_network.o trader.o -o exec
 	rm *.o
 
 main.o: ./src/main.cpp
@@ -20,5 +20,5 @@ layer.o: ./src/layer.cpp
 neural_network.o: ./src/neural_network.cpp
 	$(COMPILER) $(VERSION) -c ./src/neural_network.cpp
 
-dqn.o: ./src/dqn.cpp
-	$(COMPILER) $(VERSION) -c ./src/dqn.cpp
+trader.o: ./src/trader.cpp
+	$(COMPILER) $(VERSION) -c ./src/trader.cpp

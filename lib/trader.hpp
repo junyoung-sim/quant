@@ -1,21 +1,26 @@
 #ifndef __DQN_HPP_
 #define __DQN_HPP_
 
+#define LONG 0
+#define HOLD 1
+#define SHORT 2
+
 #include <vector>
 #include <random>
 #include <chrono>
 
+#include "data.hpp"
 #include "neural_network.hpp"
 
-class DQN
+class Trader
 {
 private:
     NeuralNetwork agent;
     NeuralNetwork target;
     std::default_random_engine seed;
 public:
-    DQN() {}
-    DQN(std::vector<std::vector<unsigned int>> shape) {
+    Trader() {}
+    Trader(std::vector<std::vector<unsigned int>> shape) {
         for(unsigned int l = 0; l < shape.size(); l++) {
             unsigned int in = shape[l][0], out = shape[l][1];
             agent.add_layer(in, out);
@@ -27,11 +32,11 @@ public:
         sync();
     }
 
-    void sync();
+    bool sample_state(std::vector<double> &series, unsigned int t, unsigned int look_back, std::vector<double> &state);
     unsigned int epsilon_greedy_policy(std::vector<double> &state, double EPSILON);
+    void sync();
 
-    std::vector<double> evaluate_agent(std::vector<std::vector<double>> &state, std::vector<std::vector<double>> &reward, double GAMMA);
-    void optimize(std::vector<std::vector<double>> &state, std::vector<std::vector<double>> &reward);
+    void optimize(std::vector<double> &series);
 };
 
 #endif
