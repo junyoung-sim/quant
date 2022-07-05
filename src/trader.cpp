@@ -7,6 +7,18 @@
 #include "../lib/bar.hpp"
 #include "../lib/trader.hpp"
 
+void Trader::init(std::vector<std::vector<unsigned int>> shape) {
+    for(unsigned int l = 0; l < shape.size(); l++) {
+        unsigned int in = shape[l][0], out = shape[l][1];
+        agent.add_layer(in, out);
+        target.add_layer(in, out);
+    }
+
+    seed.seed(std::chrono::system_clock::now().time_since_epoch().count());
+    agent.initialize(seed);
+    sync();
+}
+
 bool Trader::sample_state(std::vector<double> &series, unsigned int t, unsigned int look_back, std::vector<double> &state) {
     std::vector<double> price = {series.begin() + t, series.begin() + t + look_back};
     std::vector<double> macd = moving_average_convergence_divergence(price);
@@ -89,6 +101,8 @@ void Trader::optimize(std::vector<double> &series) {
     unsigned int SYNC_INTERVAL = 5000;
 
     unsigned int LOOK_BACK = 60;
+    init({{140,140}, {140,70}, {70,3}});
+
     for(unsigned int t = 0; t <= series.size() - LOOK_BACK; t++) {
         // sample state space
         std::vector<double> state;
@@ -114,6 +128,7 @@ void Trader::optimize(std::vector<double> &series) {
         state_memory.push_back(state);
         action_memory.push_back(action);
         reward_memory.push_back(reward);
+        std::vector<double>().swap(state);
 
         if(!terminal) {
             std::vector<double> next_state;
@@ -123,8 +138,41 @@ void Trader::optimize(std::vector<double> &series) {
             std::vector<double>().swap(next_state);
         }
 
-        std::vector<double>().swap(state);
+        // learng from replay memory
+        if(state_memory.size() == MEMORY_CAPACITY) {
+            // sample batch
+            std::vector<unsigned int> index(MEMORY_CAPACITY, 0);
+            std::iota(index.begin(), index.end(), 0);
+            std::shuffle(index.begin(), index.end(), seed);
+            index.erase(index.begin() + BATCH_SIZE, index.end());
+
+            for(unsigned int itr = 1; itr <= 1; itr++) {
+                for(unsigned int k: index) {
+                    // compute expected reward (finite bellman equation)
+                    double expected_reward = reward_memory[k];
+                    if(k <= next_state_memory.size() - 1) { // non-terminal state
+                        std::vector<double> target_q = target.predict(next_state_memory[k]);
+                        expected_reward += GAMMA * *std::max_element(target_q.begin(), target_q.end());
+
+                        std::vector<double>().swap(target_q);
+                    }
+
+                    // SGD
+                }
+            }
+            std::vector<unsigned int>().swap(index);
+
+            state_memory.erase(state_memory.begin(), state_memory.begin() + 1);
+            action_memory.erase(action_memory.begin(), action_memory.begin() + 1);
+            reward_memory.erase(reward_memory.begin(), reward_memory.begin() + 1);
+            next_state_memory.erase(next_state_memory.begin(), next_state_memory.begin() + 1);
+        }
     }
+
+    std::vector<std::vector<double>>().swap(state_memory);
+    std::vector<unsigned int>().swap(action_memory);
+    std::vector<double>().swap(reward_memory);
+    std::vector<std::vector<double>>().swap(next_state_memory);
 }
 
 /*

@@ -20,17 +20,7 @@ private:
     std::default_random_engine seed;
 public:
     Trader() {}
-    Trader(std::vector<std::vector<unsigned int>> shape) {
-        for(unsigned int l = 0; l < shape.size(); l++) {
-            unsigned int in = shape[l][0], out = shape[l][1];
-            agent.add_layer(in, out);
-            target.add_layer(in, out);
-        }
-
-        seed.seed(std::chrono::system_clock::now().time_since_epoch().count());
-        agent.initialize(seed);
-        sync();
-    }
+    void init(std::vector<std::vector<unsigned int>> shape);
 
     bool sample_state(std::vector<double> &series, unsigned int t, unsigned int look_back, std::vector<double> &state);
     unsigned int epsilon_greedy_policy(std::vector<double> &state, double EPSILON);
