@@ -158,75 +158,7 @@ void Trader::optimize(std::vector<double> &series) {
                     }
 
                     // SGD
-                }
-            }
-            std::vector<unsigned int>().swap(index);
-
-            state_memory.erase(state_memory.begin(), state_memory.begin() + 1);
-            action_memory.erase(action_memory.begin(), action_memory.begin() + 1);
-            reward_memory.erase(reward_memory.begin(), reward_memory.begin() + 1);
-            next_state_memory.erase(next_state_memory.begin(), next_state_memory.begin() + 1);
-        }
-    }
-
-    std::vector<std::vector<double>>().swap(state_memory);
-    std::vector<unsigned int>().swap(action_memory);
-    std::vector<double>().swap(reward_memory);
-    std::vector<std::vector<double>>().swap(next_state_memory);
-}
-
-/*
-void Trader::optimize(std::vector<std::vector<double>> &state, std::vector<std::vector<double>> &reward) {
-    double EPSILON_INIT = 0.90;
-    double EPSILON_MIN = 0.01;
-    double EPSILON_DECAY = 0.99;
-    double EPSILON = EPSILON_INIT;
-
-    double GAMMA = 0.30;
-
-    unsigned int BATCH_SIZE = 512;
-    std::vector<unsigned int> action_memory;
-
-    double ALPHA_INIT = 0.0001;
-    double ALPHA_MIN = 0.00001;
-    double ALPHA_DECAY = 0.99;
-    double ALPHA = ALPHA_INIT;
-
-    unsigned int EPOCH = 10;
-
-    unsigned int SYNC_INTERVAL = 2000;
-
-    for(unsigned int frame = 0; frame < state.size(); frame++) {
-        double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / EPSILON_DECAY * frame / state.size();
-        EPSILON *= pow(EPSILON_DECAY, epsilon_decay_exp);
-
-        unsigned int action = epsilon_greedy_policy(state[frame], EPSILON); // e-greedy policy
-        action_memory.push_back(action);
-
-        // batch learning
-        if(action_memory.size() >= BATCH_SIZE) {
-            std::vector<unsigned int> batch(action_memory.size(), 0);
-            std::iota(batch.begin(), batch.end(), 0);
-            std::shuffle(batch.begin(), batch.end(), seed);
-
-            double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / ALPHA_DECAY * (frame - BATCH_SIZE) / (state.size() - BATCH_SIZE);
-            ALPHA *= pow(ALPHA_DECAY, alpha_decay_exp);
-
-            for(unsigned int epoch = 1; epoch <= EPOCH; epoch++) {
-                for(unsigned int index = 0; index < BATCH_SIZE; index++) {
-                    unsigned int k = batch[index];
-                    unsigned int action = action_memory[k];
-                    // compute expected reward (finite bellman equation)
-                    double expected_reward = reward[k][action];
-                    if(k != state.size() - 1) {
-                        std::vector<double> target_q = target.predict(state[k+1]);
-                        expected_reward += GAMMA * *std::max_element(target_q.begin(), target_q.end());
-
-                        std::vector<double>().swap(target_q);
-                    }
-
-                    // SGD
-                    std::vector<double> agent_q = agent.predict(state[k]);
+                    std::vector<double> agent_q = agent.predict(state_memory[k]);
                     for(int l = agent.num_of_layers() - 1; l >= 0; l--) {
                         unsigned int start = 0, end = agent.layer(l)->out_features();
                         if(l == agent.num_of_layers() - 1) {
@@ -246,7 +178,7 @@ void Trader::optimize(std::vector<std::vector<double>> &state, std::vector<std::
 
                             for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
                                 if(l == 0)
-                                    gradient = partial_gradient * state[k][i];
+                                    gradient = partial_gradient * state_memory[k][i];
                                 else {
                                     gradient = partial_gradient * agent.layer(l-1)->node(i)->act();
                                     agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
@@ -257,28 +189,22 @@ void Trader::optimize(std::vector<std::vector<double>> &state, std::vector<std::
                             }
                         }
                     }
-
-                    std::vector<double>().swap(agent_q);
+                    std::vector<double>().swap(agent_q);                   
                 }
             }
 
-            std::vector<unsigned int>().swap(batch);
+            std::vector<unsigned int>().swap(index);
 
-            std::vector<double> performance = evaluate_agent(state, reward, GAMMA);
-            double mean_loss = performance[0], mean_reward = performance[1];
-
-            progress_bar(frame, state.size(), "frame=" + std::to_string(frame));
-
-            std::ofstream out("./data/training_performance", std::ios::app);
-            out << mean_loss << " " << mean_reward << "\n";
-            out.close();
-
-            std::vector<double>().swap(performance);
+            state_memory.erase(state_memory.begin(), state_memory.begin() + 1);
+            action_memory.erase(action_memory.begin(), action_memory.begin() + 1);
+            reward_memory.erase(reward_memory.begin(), reward_memory.begin() + 1);
+            next_state_memory.erase(next_state_memory.begin(), next_state_memory.begin() + 1);
         }
-
-        if(frame % SYNC_INTERVAL == 0) sync();
     }
 
+    std::vector<std::vector<double>>().swap(state_memory);
     std::vector<unsigned int>().swap(action_memory);
+    std::vector<double>().swap(reward_memory);
+    std::vector<std::vector<double>>().swap(next_state_memory);
 }
-*/
+
