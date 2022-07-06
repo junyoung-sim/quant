@@ -20,6 +20,8 @@ private:
     std::default_random_engine seed;
 public:
     Trader() {}
+    ~Trader() {}
+
     void init(std::vector<std::vector<unsigned int>> shape);
 
     bool sample_state(std::vector<double> &series, unsigned int t, unsigned int look_back, std::vector<double> &state);

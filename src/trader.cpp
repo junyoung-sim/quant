@@ -45,11 +45,6 @@ bool Trader::sample_state(std::vector<double> &series, unsigned int t, unsigned 
     state.insert(state.end(), sosc.begin(), sosc.end());
     state.insert(state.end(), rsi.begin(), rsi.end());
 
-    std::vector<double>().swap(price);
-    std::vector<double>().swap(macd);
-    std::vector<double>().swap(sosc);
-    std::vector<double>().swap(rsi);
-
     return t + look_back == series.size(); // terminal state
 }
 
@@ -62,8 +57,6 @@ unsigned int Trader::epsilon_greedy_policy(std::vector<double> &state, double EP
     else {
         std::vector<double> agent_q = agent.predict(state);
         action = std::max_element(agent_q.begin(), agent_q.end()) - agent_q.begin();
-
-        std::vector<double>().swap(agent_q);
     }
 
     return action;
@@ -128,14 +121,11 @@ void Trader::optimize(std::vector<double> &series) {
         state_memory.push_back(state);
         action_memory.push_back(action);
         reward_memory.push_back(reward);
-        std::vector<double>().swap(state);
 
         if(!terminal) {
             std::vector<double> next_state;
             sample_state(series, t+1, LOOK_BACK, next_state);
             next_state_memory.push_back(next_state);
-
-            std::vector<double>().swap(next_state);
         }
 
         // learng from replay memory
@@ -153,8 +143,6 @@ void Trader::optimize(std::vector<double> &series) {
                     if(k <= next_state_memory.size() - 1) { // non-terminal state
                         std::vector<double> target_q = target.predict(next_state_memory[k]);
                         expected_reward += GAMMA * *std::max_element(target_q.begin(), target_q.end());
-
-                        std::vector<double>().swap(target_q);
                     }
 
                     // SGD
@@ -189,11 +177,8 @@ void Trader::optimize(std::vector<double> &series) {
                             }
                         }
                     }
-                    std::vector<double>().swap(agent_q);                   
                 }
             }
-
-            std::vector<unsigned int>().swap(index);
 
             state_memory.erase(state_memory.begin(), state_memory.begin() + 1);
             action_memory.erase(action_memory.begin(), action_memory.begin() + 1);
@@ -201,10 +186,5 @@ void Trader::optimize(std::vector<double> &series) {
             next_state_memory.erase(next_state_memory.begin(), next_state_memory.begin() + 1);
         }
     }
-
-    std::vector<std::vector<double>>().swap(state_memory);
-    std::vector<unsigned int>().swap(action_memory);
-    std::vector<double>().swap(reward_memory);
-    std::vector<std::vector<double>>().swap(next_state_memory);
 }
 

@@ -20,9 +20,7 @@ private:
     std::vector<Layer> layers;
 public:
     NeuralNetwork() {}
-    ~NeuralNetwork() {
-        std::vector<Layer>().swap(layers);
-    }
+    ~NeuralNetwork() {}
 
     void add_layer(unsigned int in, unsigned int out);
     void initialize(std::default_random_engine &seed);

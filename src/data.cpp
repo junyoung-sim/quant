@@ -14,7 +14,7 @@ std::vector<double> read_csv(std::string path, std::string column) {
         std::getline(source, header);
 
         unsigned int delimiter_count = 0;
-        for(unsigned int i = 0; i < static_cast<int>(header.find(column)); i++) {
+        for(unsigned int i = 0; i < static_cast<unsigned int>(header.find(column)); i++) {
             if(header[i] == ',')
                 delimiter_count += 1;
         }
@@ -116,8 +116,6 @@ std::vector<double> stochastic_oscillator(std::vector<double> &series, unsigned 
         double min = *std::min_element(series_t.begin(), series_t.end());
 
         osc.push_back((series_t[periods-1] - min) / (max - min));
-
-        std::vector<double>().swap(series_t);
     }
 
     return osc;
