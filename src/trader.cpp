@@ -30,7 +30,6 @@ bool Trader::sample_state(std::vector<double> &series, unsigned int t, unsigned 
                                       static_cast<unsigned int>(sosc.size()),
                                       static_cast<unsigned int>(rsi.size())};
     unsigned int min_size = *std::min_element(size.begin(), size.end());
-    std::vector<unsigned int>().swap(size);
 
     price.erase(price.begin(), price.begin() + (price.size() - min_size));
     macd.erase(macd.begin(), macd.begin() + (macd.size() - min_size));
@@ -45,7 +44,7 @@ bool Trader::sample_state(std::vector<double> &series, unsigned int t, unsigned 
     state.insert(state.end(), sosc.begin(), sosc.end());
     state.insert(state.end(), rsi.begin(), rsi.end());
 
-    return t + look_back == series.size(); // terminal state
+    return t + look_back == series.size() - 1; // terminal state
 }
 
 unsigned int Trader::epsilon_greedy_policy(std::vector<double> &state, double EPSILON) {
@@ -96,7 +95,10 @@ void Trader::optimize(std::vector<double> &series) {
     unsigned int LOOK_BACK = 60;
     init({{140,140}, {140,70}, {70,3}});
 
-    for(unsigned int t = 0; t <= series.size() - LOOK_BACK; t++) {
+    // partition series (train, validation, test)
+
+
+    for(unsigned int t = 0; t <= series.size() - LOOK_BACK - 1; t++) {
         // sample state space
         std::vector<double> state;
         bool terminal = sample_state(series, t, LOOK_BACK, state);
@@ -136,7 +138,7 @@ void Trader::optimize(std::vector<double> &series) {
             std::shuffle(index.begin(), index.end(), seed);
             index.erase(index.begin() + BATCH_SIZE, index.end());
 
-            for(unsigned int itr = 1; itr <= 1; itr++) {
+            for(unsigned int itr = 1; itr <= ITERATION; itr++) {
                 for(unsigned int k: index) {
                     // compute expected reward (finite bellman equation)
                     double expected_reward = reward_memory[k];
@@ -150,7 +152,7 @@ void Trader::optimize(std::vector<double> &series) {
                     for(int l = agent.num_of_layers() - 1; l >= 0; l--) {
                         unsigned int start = 0, end = agent.layer(l)->out_features();
                         if(l == agent.num_of_layers() - 1) {
-                            start = action;
+                            start = action_memory[k];
                             end = start + 1;
                         }
 
@@ -184,7 +186,11 @@ void Trader::optimize(std::vector<double> &series) {
             action_memory.erase(action_memory.begin(), action_memory.begin() + 1);
             reward_memory.erase(reward_memory.begin(), reward_memory.begin() + 1);
             next_state_memory.erase(next_state_memory.begin(), next_state_memory.begin() + 1);
+
+            // plot validation results
         }
+
+        if(t % SYNC_INTERVAL == 0) sync();
     }
 }
 
