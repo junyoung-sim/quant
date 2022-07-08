@@ -96,21 +96,25 @@ void Trader::optimize(std::vector<double> &series) {
     init({{140,140}, {140,70}, {70,3}});
 
     // partition series (train, validation, test)
+    std::vector<double> train_series = {series.begin(), series.begin() + (int)(series.size() * 0.98)};
+    std::vector<double> test_series = {series.begin() + (int)(series.size() * 0.98), series.end()};;
+    std::vector<double>().swap(series);
 
+    for(unsigned int t = 0; t <= train_series.size() - LOOK_BACK - 1; t++) {
+        progress_bar(t, train_series.size() - LOOK_BACK, "@frame=" + std::to_string(t));
 
-    for(unsigned int t = 0; t <= series.size() - LOOK_BACK - 1; t++) {
         // sample state space
         std::vector<double> state;
-        bool terminal = sample_state(series, t, LOOK_BACK, state);
+        bool terminal = sample_state(train_series, t, LOOK_BACK, state);
 
         // compute action given state space
-        double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * t / (series.size() - LOOK_BACK + 1);
+        double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * t / (train_series.size() - LOOK_BACK);
         EPSILON = EPSILON_INIT * pow(EPSILON_DECAY, epsilon_decay_exp);
 
         unsigned int action = epsilon_greedy_policy(state, EPSILON); // LONG (0), HOLD (1), SHORT (2)
 
         // observe reward
-        double diff = (series[t+LOOK_BACK] - series[t+LOOK_BACK-1]) * 100 / series[t+LOOK_BACK-1];
+        double diff = (train_series[t+LOOK_BACK] - train_series[t+LOOK_BACK-1]) * 100 / train_series[t+LOOK_BACK-1];
         double reward;
         if(action == LONG)
             reward = diff;
@@ -126,11 +130,11 @@ void Trader::optimize(std::vector<double> &series) {
 
         if(!terminal) {
             std::vector<double> next_state;
-            sample_state(series, t+1, LOOK_BACK, next_state);
+            sample_state(train_series, t+1, LOOK_BACK, next_state);
             next_state_memory.push_back(next_state);
         }
 
-        // learng from replay memory
+        // learn from replay memory
         if(state_memory.size() == MEMORY_CAPACITY) {
             // sample batch
             std::vector<unsigned int> index(MEMORY_CAPACITY, 0);
@@ -140,7 +144,7 @@ void Trader::optimize(std::vector<double> &series) {
 
             for(unsigned int itr = 1; itr <= ITERATION; itr++) {
                 for(unsigned int k: index) {
-                    // compute expected reward (finite bellman equation)
+                    // compute expected reward
                     double expected_reward = reward_memory[k];
                     if(k <= next_state_memory.size() - 1) { // non-terminal state
                         std::vector<double> target_q = target.predict(next_state_memory[k]);
@@ -186,8 +190,6 @@ void Trader::optimize(std::vector<double> &series) {
             action_memory.erase(action_memory.begin(), action_memory.begin() + 1);
             reward_memory.erase(reward_memory.begin(), reward_memory.begin() + 1);
             next_state_memory.erase(next_state_memory.begin(), next_state_memory.begin() + 1);
-
-            // plot validation results
         }
 
         if(t % SYNC_INTERVAL == 0) sync();
