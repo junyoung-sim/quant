@@ -8,6 +8,7 @@
 #include <vector>
 #include <random>
 #include <chrono>
+#include <tuple>
 
 #include "data.hpp"
 #include "neural_network.hpp"
@@ -25,7 +26,7 @@ public:
     void init(std::vector<std::vector<unsigned int>> shape);
 
     bool sample_state(std::vector<double> &series, unsigned int t, unsigned int look_back, std::vector<double> &state);
-    unsigned int epsilon_greedy_policy(std::vector<double> &state, double EPSILON);
+    std::tuple<unsigned int, double> epsilon_greedy_policy(std::vector<double> &state, double EPSILON);
     void sync();
 
     void optimize(std::vector<double> &series);
