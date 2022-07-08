@@ -5,6 +5,7 @@
 #include <tuple>
 #include <cmath>
 #include <fstream>
+#include <iostream>
 
 #include "../lib/bar.hpp"
 #include "../lib/trader.hpp"
@@ -86,12 +87,12 @@ void Trader::optimize(std::vector<double> &series) {
 
     unsigned int ITERATION = 10;
     unsigned int BATCH_SIZE = 64;
-    double ALPHA_INIT = 0.0001;
+    double ALPHA_INIT = 0.001;
     double ALPHA_MIN = 0.00001;
     double ALPHA_DECAY = 0.99;
     double ALPHA = ALPHA_INIT;
 
-    unsigned int SYNC_INTERVAL = 5000;
+    unsigned int SYNC_INTERVAL = 10000;
 
     unsigned int LOOK_BACK = 60;
     init({{140,140}, {140,70}, {70,3}});
@@ -101,8 +102,6 @@ void Trader::optimize(std::vector<double> &series) {
     double reward_sum = 0.00, mean_reward = 0.00;
 
     for(unsigned int t = 0; t <= series.size() - LOOK_BACK - 1; t++) {
-        progress_bar(t, series.size() - LOOK_BACK, "@frame=" + std::to_string(t));
-
         std::vector<double> state;
         bool terminal = sample_state(series, t, LOOK_BACK, state);
 
@@ -113,7 +112,7 @@ void Trader::optimize(std::vector<double> &series) {
         unsigned int action = std::get<0>(action_q);
         double q_value = std::get<1>(action_q);
 
-        double diff = (series[t+LOOK_BACK] - series[t+LOOK_BACK-1]) / series[t+LOOK_BACK-1];
+        double diff = (series[t+LOOK_BACK] - series[t+LOOK_BACK-1]) * 100 / series[t+LOOK_BACK-1];
         double reward;
         if(action == LONG)
             reward = diff;
@@ -148,6 +147,8 @@ void Trader::optimize(std::vector<double> &series) {
                 out.close();
             }
         }
+
+        std::cout << "@frame=" << t << ": action = " << action << ", expected reward = " << reward << "\n";
 
         if(state_memory.size() == MEMORY_CAPACITY) {
             std::vector<unsigned int> index(MEMORY_CAPACITY, 0);
