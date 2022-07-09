@@ -98,7 +98,7 @@ void Trader::optimize(std::vector<double> &series) {
 
     unsigned int training_count = 0;
     double loss_sum = 0.00, mean_loss = 0.00;
-    double reward_sum = 0.00, mean_reward = 0.00;
+    double buy_and_hold = 1.00, model_return = 1.00;
 
     for(unsigned int t = 0; t <= series.size() - LOOK_BACK - 1; t++) {
         std::vector<double> state;
@@ -111,43 +111,42 @@ void Trader::optimize(std::vector<double> &series) {
         unsigned int action = std::get<0>(action_q);
         double q_value = std::get<1>(action_q);
 
-        double diff = (series[t+LOOK_BACK] - series[t+LOOK_BACK-1]) * 100 / series[t+LOOK_BACK-1];
-        double reward;
+        double diff = (series[t+LOOK_BACK] - series[t+LOOK_BACK-1]) / series[t+LOOK_BACK-1];
+        double observed_reward;
         if(action == LONG)
-            reward = diff;
+            observed_reward = diff;
         else if(action == SHORT)
-            reward = -1.00 * diff;
+            observed_reward = -1.00 * diff;
         else
-            reward = 0.00;
+            observed_reward = 0.00;
 
+        std::cout << "@frame=" << t << ": action = " << action << ", observed reward = " << observed_reward << "\n";
+
+        double expected_reward = observed_reward;
         if(!terminal) {
             std::vector<double> next_state;
             sample_state(series, t+1, LOOK_BACK, next_state);
 
             std::vector<double> target_q = target.predict(next_state);
-            reward += GAMMA * *std::max_element(target_q.begin(), target_q.end());
+            expected_reward += GAMMA * *std::max_element(target_q.begin(), target_q.end());
 
             next_state_memory.push_back(next_state);
         }
 
         state_memory.push_back(state);
         action_memory.push_back(action);
-        reward_memory.push_back(reward);
-
-        loss_sum += pow(reward - q_value, 2);
-        mean_loss = loss_sum / (t + 1);
-        reward_sum += reward;
-        mean_reward = reward_sum / (t + 1);
+        reward_memory.push_back(expected_reward);
 
         if(training_count > 0) {
-            std::ofstream out("./data/training_performance", std::ios::app);
-            if(out.is_open()) {
-                out << mean_loss << " " << mean_reward << "\n";
-                out.close();
-            }
-        }
+            buy_and_hold *= 1.00 + diff;
+            model_return *= 1.00 + observed_reward;
+            loss_sum += pow(expected_reward - q_value, 2);
+            mean_loss = loss_sum / training_count;
 
-        std::cout << "@frame=" << t << ": action = " << action << ", expected reward = " << reward << "\n";
+            std::ofstream out("./data/log", std::ios::app);
+            out << mean_loss << " " << buy_and_hold << " " << model_return << "\n";
+            out.close();
+        }
 
         if(state_memory.size() == MEMORY_CAPACITY) {
             std::vector<unsigned int> index(MEMORY_CAPACITY, 0);
