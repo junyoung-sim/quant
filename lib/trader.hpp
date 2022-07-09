@@ -5,9 +5,9 @@
 #define HOLD 1
 #define SHORT 2
 
+#include <cstdlib>
 #include <vector>
 #include <random>
-#include <chrono>
 #include <tuple>
 
 #include "data.hpp"

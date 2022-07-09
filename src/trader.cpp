@@ -5,7 +5,6 @@
 #include <tuple>
 #include <cmath>
 #include <fstream>
-#include <iostream>
 
 #include "../lib/bar.hpp"
 #include "../lib/trader.hpp"
@@ -108,7 +107,7 @@ void Trader::optimize(std::vector<double> &series) {
         double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * t / (series.size() - LOOK_BACK);
         EPSILON = EPSILON_INIT * pow(EPSILON_DECAY, epsilon_decay_exp);
 
-        std::tuple<unsigned int, double> action_q = epsilon_greedy_policy(state, EPSILON); // (action: LONG = 0, HOLD = 1, SHORT = 2, q-value)
+        std::tuple<unsigned int, double> action_q = epsilon_greedy_policy(state, EPSILON); // (action, q-value); action: LONG = 0, HOLD = 1, SHORT = 2
         unsigned int action = std::get<0>(action_q);
         double q_value = std::get<1>(action_q);
 
@@ -138,7 +137,7 @@ void Trader::optimize(std::vector<double> &series) {
         loss_sum += pow(reward - q_value, 2);
         mean_loss = loss_sum / (t + 1);
         reward_sum += reward;
-        mean_reward = reward / (t + 1);
+        mean_reward = reward_sum / (t + 1);
 
         if(training_count != 0) {
             std::ofstream out("./data/training_performance", std::ios::app);
@@ -156,7 +155,7 @@ void Trader::optimize(std::vector<double> &series) {
             std::shuffle(index.begin(), index.end(), seed);
             index.erase(index.begin() + BATCH_SIZE, index.end());
 
-            double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / log(ALPHA_DECAY) * training_count / (series.size() - LOOK_BACK - MEMORY_CAPACITY);
+            double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / log10(ALPHA_DECAY) * training_count / (series.size() - LOOK_BACK - MEMORY_CAPACITY);
             ALPHA = ALPHA_INIT * pow(ALPHA_DECAY, alpha_decay_exp);
 
             for(unsigned int itr = 1; itr <= ITERATION; itr++) {
