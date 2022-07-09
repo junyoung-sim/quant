@@ -28,7 +28,6 @@ def graph(i):
 
 def main():
     ani = animation.FuncAnimation(fig, graph, save_count=0, cache_frame_data=False)
-    plt.legend()
     plt.show()
 
 if __name__ == "__main__":
