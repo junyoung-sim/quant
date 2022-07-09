@@ -86,7 +86,7 @@ void Trader::optimize(std::vector<double> &series) {
 
     unsigned int ITERATION = 10;
     unsigned int BATCH_SIZE = 64;
-    double ALPHA_INIT = 0.001;
+    double ALPHA_INIT = 0.0001;
     double ALPHA_MIN = 0.00001;
     double ALPHA_DECAY = 0.99;
     double ALPHA = ALPHA_INIT;
@@ -94,7 +94,7 @@ void Trader::optimize(std::vector<double> &series) {
     unsigned int SYNC_INTERVAL = 10000;
 
     unsigned int LOOK_BACK = 60;
-    init({{140,140}, {140,70}, {70,3}});
+    init({{140,120}, {120,60}, {60,3}});
 
     unsigned int training_count = 0;
     double loss_sum = 0.00, mean_loss = 0.00;
@@ -139,7 +139,7 @@ void Trader::optimize(std::vector<double> &series) {
         reward_sum += reward;
         mean_reward = reward_sum / (t + 1);
 
-        if(training_count != 0) {
+        if(training_count > 0) {
             std::ofstream out("./data/training_performance", std::ios::app);
             if(out.is_open()) {
                 out << mean_loss << " " << mean_reward << "\n";
