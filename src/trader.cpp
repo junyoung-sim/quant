@@ -23,26 +23,31 @@ void Trader::init(std::vector<std::vector<unsigned int>> shape) {
 
 bool Trader::sample_state(std::vector<double> &series, unsigned int t, unsigned int look_back, std::vector<double> &state) {
     std::vector<double> price = {series.begin() + t, series.begin() + t + look_back};
-    std::vector<double> macd = moving_average_convergence_divergence(price);
+    std::vector<double> macd = moving_average_convergence_divergence(price, 12, 26);
+    std::vector<double> ema9 = exponential_moving_average(price, 9);
     std::vector<double> sosc = stochastic_oscillator(price, 14);
     std::vector<double> rsi = relative_strength_index(price, 14);
 
     std::vector<unsigned int> size = {static_cast<unsigned int>(price.size()),
                                       static_cast<unsigned int>(macd.size()),
+                                      static_cast<unsigned int>(ema9.size()),
                                       static_cast<unsigned int>(sosc.size()),
                                       static_cast<unsigned int>(rsi.size())};
     unsigned int min_size = *std::min_element(size.begin(), size.end());
 
     price.erase(price.begin(), price.begin() + (price.size() - min_size));
     macd.erase(macd.begin(), macd.begin() + (macd.size() - min_size));
+    ema9.erase(ema9.begin(), ema9.begin() + (ema9.size() - min_size));
     sosc.erase(sosc.begin(), sosc.begin() + (sosc.size() - min_size));
     rsi.erase(rsi.begin(), rsi.begin() + (rsi.size() - min_size));
 
     standardize(price);
     standardize(macd);
+    standardize(ema9);
 
     state.insert(state.end(), price.begin(), price.end());
     state.insert(state.end(), macd.begin(), macd.end());
+    state.insert(state.end(), ema9.begin(), ema9.end());
     state.insert(state.end(), sosc.begin(), sosc.end());
     state.insert(state.end(), rsi.begin(), rsi.end());
 
@@ -52,11 +57,11 @@ bool Trader::sample_state(std::vector<double> &series, unsigned int t, unsigned 
 std::tuple<unsigned int, double> Trader::epsilon_greedy_policy(std::vector<double> &state, double EPSILON) {
     unsigned int action;
     double explore = (double)rand() / RAND_MAX;
-    // e-greedy policy
+
     std::vector<double> agent_q = agent.predict(state);
     if(explore < EPSILON)
         action = rand() % agent.layer(agent.num_of_layers() - 1)->out_features();
-    else 
+    else
         action = std::max_element(agent_q.begin(), agent_q.end()) - agent_q.begin();
 
     std::tuple<unsigned int, double> action_q = std::make_tuple(action, agent_q[action]);
@@ -70,31 +75,30 @@ void Trader::sync() {
                 target.layer(l)->node(n)->set_weight(i, agent.layer(l)->node(n)->weight(i));
 }
 
-void Trader::optimize(std::vector<double> &series) {
-    double EPSILON_INIT = 0.90;
-    double EPSILON_MIN = 0.01;
-    double EPSILON_DECAY = 0.99;
+void Trader::optimize(std::vector<double> &series, std::string checkpoint) {
+    double EPSILON_INIT = 1.00;
+    double EPSILON_MIN = 0.10;
+    double EPSILON_DECAY = 0.999;
     double EPSILON = EPSILON_INIT;
 
-    double GAMMA = 0.50;
+    double GAMMA = 0.30;
 
-    unsigned int MEMORY_CAPACITY = 10000;
+    unsigned int MEMORY_CAPACITY = 50000;
     std::vector<std::vector<double>> state_memory;
     std::vector<unsigned int> action_memory;
     std::vector<double> reward_memory;
     std::vector<std::vector<double>> next_state_memory;
 
     unsigned int ITERATION = 10;
-    unsigned int BATCH_SIZE = 64;
+    unsigned int BATCH_SIZE = 128;
     double ALPHA_INIT = 0.0001;
     double ALPHA_MIN = 0.00001;
-    double ALPHA_DECAY = 0.99;
+    double ALPHA_DECAY = 0.999;
     double ALPHA = ALPHA_INIT;
 
-    unsigned int SYNC_INTERVAL = 10000;
+    unsigned int SYNC_INTERVAL = 1000;
 
-    unsigned int LOOK_BACK = 60;
-    init({{140,120}, {120,60}, {60,3}});
+    unsigned int LOOK_BACK = 50;
 
     unsigned int training_count = 0;
     double loss_sum = 0.00, mean_loss = 0.00;
@@ -104,10 +108,7 @@ void Trader::optimize(std::vector<double> &series) {
         std::vector<double> state;
         bool terminal = sample_state(series, t, LOOK_BACK, state);
 
-        double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * t / (series.size() - LOOK_BACK);
-        EPSILON = EPSILON_INIT * pow(EPSILON_DECAY, epsilon_decay_exp);
-
-        std::tuple<unsigned int, double> action_q = epsilon_greedy_policy(state, EPSILON); // (action, q-value); action: LONG = 0, HOLD = 1, SHORT = 2
+        std::tuple<unsigned int, double> action_q = epsilon_greedy_policy(state, EPSILON);
         unsigned int action = std::get<0>(action_q);
         double q_value = std::get<1>(action_q);
 
@@ -149,13 +150,16 @@ void Trader::optimize(std::vector<double> &series) {
         }
 
         if(state_memory.size() == MEMORY_CAPACITY) {
+            double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * t / (series.size() - LOOK_BACK);
+            EPSILON = EPSILON_INIT * pow(EPSILON_DECAY, epsilon_decay_exp);
+
+            double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / log10(ALPHA_DECAY) * training_count / (series.size() - LOOK_BACK - MEMORY_CAPACITY);
+            ALPHA = ALPHA_INIT * pow(ALPHA_DECAY, alpha_decay_exp);
+
             std::vector<unsigned int> index(MEMORY_CAPACITY, 0);
             std::iota(index.begin(), index.end(), 0);
             std::shuffle(index.begin(), index.end(), seed);
             index.erase(index.begin() + BATCH_SIZE, index.end());
-
-            double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / log10(ALPHA_DECAY) * training_count / (series.size() - LOOK_BACK - MEMORY_CAPACITY);
-            ALPHA = ALPHA_INIT * pow(ALPHA_DECAY, alpha_decay_exp);
 
             for(unsigned int itr = 1; itr <= ITERATION; itr++) {
                 for(unsigned int k: index) {
@@ -201,7 +205,16 @@ void Trader::optimize(std::vector<double> &series) {
             training_count++;
         }
 
-        if(t % SYNC_INTERVAL == 0) sync();
+        if(t % SYNC_INTERVAL == 0) {
+            sync();
+            save(checkpoint);
+        }
     }
+
+    save(checkpoint);
+}
+
+void Trader::save(std::string path) {
+    agent.save(path);
 }
 

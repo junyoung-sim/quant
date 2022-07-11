@@ -2,7 +2,7 @@
 #define __DQN_HPP_
 
 #define LONG 0
-#define HOLD 1
+#define NONE 1
 #define SHORT 2
 
 #include <cstdlib>
@@ -20,7 +20,9 @@ private:
     NeuralNetwork target;
     std::default_random_engine seed;
 public:
-    Trader() {}
+    Trader() {
+        init({{125,100}, {100,50}, {50,3}});
+    }
     ~Trader() {}
 
     void init(std::vector<std::vector<unsigned int>> shape);
@@ -29,7 +31,10 @@ public:
     std::tuple<unsigned int, double> epsilon_greedy_policy(std::vector<double> &state, double EPSILON);
     void sync();
 
-    void optimize(std::vector<double> &series);
+    void optimize(std::vector<double> &series, std::string checkpoint);
+
+    void save(std::string path);
+    void load(std::string path);
 };
 
 #endif

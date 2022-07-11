@@ -96,9 +96,9 @@ std::vector<double> exponential_moving_average(std::vector<double> &series, unsi
     return ema;
 }
 
-std::vector<double> moving_average_convergence_divergence(std::vector<double> &series) {
-    std::vector<double> ema12 = exponential_moving_average(series, 12);
-    std::vector<double> ema26 = exponential_moving_average(series, 26);
+std::vector<double> moving_average_convergence_divergence(std::vector<double> &series, unsigned int short_period, unsigned int long_period) {
+    std::vector<double> ema12 = exponential_moving_average(series, short_period);
+    std::vector<double> ema26 = exponential_moving_average(series, long_period);
     ema12.erase(ema12.begin(), ema12.begin() + (ema12.size() - ema26.size()));
 
     std::vector<double> macd;

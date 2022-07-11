@@ -48,7 +48,7 @@ std::vector<double> NeuralNetwork::predict(std::vector<double> &x) {
             double matmul = 0.00;
             for(unsigned int i = 0; i < layers[l].in_features(); i++) {
                 if(l == 0)
-                    matmul += x[i] * layers[l].node(n)->weight(i);
+                   matmul += x[i] * layers[l].node(n)->weight(i);
                 else
                     matmul += layers[l-1].node(i)->act() * layers[l].node(n)->weight(i);
             }
