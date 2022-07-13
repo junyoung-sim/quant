@@ -54,7 +54,7 @@ std::vector<double> NeuralNetwork::predict(std::vector<double> &x) {
             }
 
             layers[l].node(n)->init();
-            layers[l].node(n)->set_sum(matmul + layers[l].node(n)->bias());
+           layers[l].node(n)->set_sum(matmul + layers[l].node(n)->bias());
 
             if(l == layers.size() - 1)
                 yhat.push_back(layers[l].node(n)->sum()); // output layer (q-values)

@@ -31,33 +31,31 @@ void Trader::sync() {
 bool Trader::sample_state(std::vector<double> &asset, std::vector<double> &vix, unsigned int t, unsigned int look_back, std::vector<double> &state) {
     std::vector<double> asset_price = {asset.begin() + t, asset.begin() + t + look_back};
     std::vector<double> vix_signal = {vix.begin() + t, vix.begin() + t + look_back};
+
+    std::vector<double> vix_ema9 = exponential_moving_average(vix_signal, 9);
+    std::vector<double> asset_ema9 = exponential_moving_average(asset_price, 9);
     std::vector<double> macd = moving_average_convergence_divergence(asset_price, 12, 26);
-    std::vector<double> ema9 = exponential_moving_average(asset_price, 9);
     std::vector<double> rsi = relative_strength_index(asset_price, 14);
 
-    std::vector<unsigned int> size = {static_cast<unsigned int>(asset_price.size()),
-                                      static_cast<unsigned int>(vix_signal.size()),
+    std::vector<unsigned int> size = {static_cast<unsigned int>(vix_ema9.size()),
+                                      static_cast<unsigned int>(asset_ema9.size()),
                                       static_cast<unsigned int>(macd.size()),
-                                      static_cast<unsigned int>(ema9.size()),
-                                      static_cast<unsigned int>(rsi.size()),};
+                                      static_cast<unsigned int>(rsi.size())};
     unsigned int min_size = *std::min_element(size.begin(), size.end());
 
-    asset_price.erase(asset_price.begin(), asset_price.begin() + (asset_price.size() - min_size));
-    vix_signal.erase(vix_signal.begin(), vix_signal.begin() + (vix_signal.size() - min_size));
+    vix_ema9.erase(vix_ema9.begin(), vix_ema9.begin() + (vix_ema9.size() - min_size));
+    asset_ema9.erase(asset_ema9.begin(), asset_ema9.begin() + (asset_ema9.size() - min_size));
     macd.erase(macd.begin(), macd.begin() + (macd.size() - min_size));
-    ema9.erase(ema9.begin(), ema9.begin() + (ema9.size() - min_size));
     rsi.erase(rsi.begin(), rsi.begin() + (rsi.size() - min_size));
 
-    standardize(asset_price);
-    standardize(vix_signal);
+    standardize(vix_ema9);
+    standardize(asset_ema9);
     standardize(macd);
-    standardize(ema9);
     standardize(rsi);
 
-    state.insert(state.end(), asset_price.begin(), asset_price.end());
-    state.insert(state.end(), vix_signal.begin(), vix_signal.end());
+    state.insert(state.end(), vix_ema9.begin(), vix_ema9.end());
+    state.insert(state.end(), asset_ema9.begin(), asset_ema9.end());
     state.insert(state.end(), macd.begin(), macd.end());
-    state.insert(state.end(), ema9.begin(), ema9.end());
     state.insert(state.end(), rsi.begin(), rsi.end());
 
     return t + look_back == asset.size() - 1;
@@ -83,7 +81,7 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
     double EPSILON_DECAY = 0.999;
     double EPSILON = EPSILON_INIT;
 
-    double GAMMA = 0.20;
+    double GAMMA = 0.30;
 
     unsigned int MEMORY_CAPACITY = 50000;
     std::vector<std::vector<double>> state_memory;
@@ -91,12 +89,13 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
     std::vector<double> reward_memory;
     std::vector<std::vector<double>> next_state_memory;
 
-    unsigned int ITERATION = 10;
-//    unsigned int BATCH_SIZE = 64;
-//    double ALPHA_INIT = 0.0001;
-//    double ALPHA_MIN = 0.0001;
-//    double ALPHA_DECAY = 0.999;
-    double ALPHA = 0.0001;
+    unsigned int ITERATION = 1;
+    unsigned int BATCH_SIZE = 512;
+
+    double ALPHA_INIT = 0.0001;
+    double ALPHA_MIN = 0.00001;
+    double ALPHA_DECAY = 0.999;
+    double ALPHA = ALPHA_INIT;
 
     unsigned int SYNC_INTERVAL = 1000;
 
@@ -155,8 +154,8 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
             double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * t / (asset.size() - LOOK_BACK);
             EPSILON = EPSILON_INIT * pow(EPSILON_DECAY, epsilon_decay_exp);
 
-            //double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / log10(ALPHA_DECAY) * training_count / (asset.size() - LOOK_BACK - MEMORY_CAPACITY);
-            //ALPHA = ALPHA_INIT * pow(ALPHA_DECAY, alpha_decay_exp);
+            double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / log10(ALPHA_DECAY) * t / (asset.size() - LOOK_BACK);
+            ALPHA = ALPHA_INIT * pow(ALPHA_DECAY, alpha_decay_exp);
 
             std::vector<unsigned int> index(MEMORY_CAPACITY, 0);
             std::iota(index.begin(), index.end(), 0);
