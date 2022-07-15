@@ -96,49 +96,31 @@ std::vector<double> exponential_moving_average(std::vector<double> &series, unsi
     return ema;
 }
 
-std::vector<double> moving_average_convergence_divergence(std::vector<double> &series, unsigned int short_period, unsigned int long_period) {
-    std::vector<double> ema12 = exponential_moving_average(series, short_period);
-    std::vector<double> ema26 = exponential_moving_average(series, long_period);
-    ema12.erase(ema12.begin(), ema12.begin() + (ema12.size() - ema26.size()));
+std::vector<double> moving_average_convergence_divergence(std::vector<double> &series, unsigned int fast_period, unsigned int slow_period) {
+    std::vector<double> fast_ema = exponential_moving_average(series, fast_period);
+    std::vector<double> slow_ema = exponential_moving_average(series, slow_period);
+    fast_ema.erase(fast_ema.begin(), fast_ema.begin() + (fast_ema.size() - slow_ema.size()));
 
     std::vector<double> macd;
-    for(unsigned int t = 0; t < ema12.size(); t++)
-        macd.push_back(ema12[t] - ema26[t]);
+    for(unsigned int t = 0; t < fast_ema.size(); t++)
+        macd.push_back(fast_ema[t] - slow_ema[t]);
 
     return macd;
 }
 
-std::vector<double> stochastic_oscillator(std::vector<double> &series, unsigned int periods) {
-    std::vector<double> osc;
-    for(unsigned int t = 0; t <= series.size() - periods; t++) {
-        std::vector<double> series_t = {series.begin() + t, series.begin() + t + periods};
+std::vector<double> stochastic_oscillator(std::vector<double> &series, unsigned int k_period, unsigned int d_period) {
+    std::vector<double> sosc;
+    for(unsigned int t = 0; t <= series.size() - k_period; t++) {
+        std::vector<double> series_t = {series.begin() + t, series.begin() + t + k_period};
         double max = *std::max_element(series_t.begin(), series_t.end());
         double min = *std::min_element(series_t.begin(), series_t.end());
 
-        osc.push_back((series_t[periods-1] - min) / (max - min));
+        for(unsigned int k = t; k < t + k_period; k++)
+            sosc.push_back((series[k] - min) / (max - min));
     }
 
-    return osc;
-}
+    std::vector<double> sosc_ema = exponential_moving_average(sosc, d_period);
 
-std::vector<double> relative_strength_index(std::vector<double> &series, unsigned int periods) {
-    std::vector<double> rsi;
-    for(unsigned int t = 0; t <= series.size() - periods; t++) {
-        double mean_gain = 0.00, mean_loss = 0.00;
-        for(unsigned int i = t; i < t + periods - 1; i++) {
-            double delta = (series[i+1] - series[i]) / series[i];
-            if(delta > 0.00)
-                mean_gain += delta;
-            else
-                mean_loss += abs(delta);
-        }
-
-        if(mean_loss == 0.00)
-            rsi.push_back(1.00);
-        else
-            rsi.push_back(1.00 - 1.00 / (1.00 + mean_gain / mean_loss));
-    }
-
-    return rsi;
+    return sosc_ema;
 }
 

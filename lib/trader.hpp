@@ -21,7 +21,7 @@ private:
     std::default_random_engine seed;
 public:
     Trader() {
-        init({{100,100},{100,50},{50,3}});
+        init({{205,150},{150,60},{60,20},{20,3}});
     }
     ~Trader() {}
 

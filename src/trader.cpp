@@ -30,33 +30,36 @@ void Trader::sync() {
 
 bool Trader::sample_state(std::vector<double> &asset, std::vector<double> &vix, unsigned int t, unsigned int look_back, std::vector<double> &state) {
     std::vector<double> asset_price = {asset.begin() + t, asset.begin() + t + look_back};
+    std::vector<double> asset_fast_ema = exponential_moving_average(asset_price, 3);
+    std::vector<double> asset_slow_ema = exponential_moving_average(asset_price, 10);
+
     std::vector<double> vix_signal = {vix.begin() + t, vix.begin() + t + look_back};
+    std::vector<double> vix_sosc_ema = stochastic_oscillator(vix_signal, 10, 10);
 
-    std::vector<double> vix_ema9 = exponential_moving_average(vix_signal, 9);
-    std::vector<double> asset_ema9 = exponential_moving_average(asset_price, 9);
-    std::vector<double> macd = moving_average_convergence_divergence(asset_price, 12, 26);
-    std::vector<double> rsi = relative_strength_index(asset_price, 14);
-
-    std::vector<unsigned int> size = {static_cast<unsigned int>(vix_ema9.size()),
-                                      static_cast<unsigned int>(asset_ema9.size()),
-                                      static_cast<unsigned int>(macd.size()),
-                                      static_cast<unsigned int>(rsi.size())};
+    std::vector<unsigned int> size = {static_cast<unsigned int>(asset_price.size()),
+                                      static_cast<unsigned int>(asset_fast_ema.size()),
+                                      static_cast<unsigned int>(asset_slow_ema.size()),
+                                      static_cast<unsigned int>(vix_signal.size()),
+                                      static_cast<unsigned int>(vix_sosc_ema.size())};
     unsigned int min_size = *std::min_element(size.begin(), size.end());
 
-    vix_ema9.erase(vix_ema9.begin(), vix_ema9.begin() + (vix_ema9.size() - min_size));
-    asset_ema9.erase(asset_ema9.begin(), asset_ema9.begin() + (asset_ema9.size() - min_size));
-    macd.erase(macd.begin(), macd.begin() + (macd.size() - min_size));
-    rsi.erase(rsi.begin(), rsi.begin() + (rsi.size() - min_size));
+    asset_price.erase(asset_price.begin(), asset_price.begin() + (asset_price.size() - min_size));
+    asset_fast_ema.erase(asset_fast_ema.begin(), asset_fast_ema.begin() + (asset_fast_ema.size() - min_size));
+    asset_slow_ema.erase(asset_slow_ema.begin(), asset_slow_ema.begin() + (asset_slow_ema.size() - min_size));
+    vix_signal.erase(vix_signal.begin(), vix_signal.begin() + (vix_signal.size() - min_size));
+    vix_sosc_ema.erase(vix_sosc_ema.begin(), vix_sosc_ema.begin() + (vix_sosc_ema.size() - min_size));
 
-    standardize(vix_ema9);
-    standardize(asset_ema9);
-    standardize(macd);
-    standardize(rsi);
+    standardize(asset_price);
+    standardize(asset_fast_ema);
+    standardize(asset_slow_ema);
+    standardize(vix_signal);
+    standardize(vix_sosc_ema);
 
-    state.insert(state.end(), vix_ema9.begin(), vix_ema9.end());
-    state.insert(state.end(), asset_ema9.begin(), asset_ema9.end());
-    state.insert(state.end(), macd.begin(), macd.end());
-    state.insert(state.end(), rsi.begin(), rsi.end());
+    state.insert(state.end(), asset_price.begin(), asset_price.end());
+    state.insert(state.end(), asset_fast_ema.begin(), asset_fast_ema.end());
+    state.insert(state.end(), asset_slow_ema.begin(), asset_slow_ema.end());
+    state.insert(state.end(), vix_signal.begin(), vix_signal.end());
+    state.insert(state.end(), vix_sosc_ema.begin(), vix_sosc_ema.end());
 
     return t + look_back == asset.size() - 1;
 }
@@ -76,9 +79,9 @@ std::tuple<unsigned int, double> Trader::epsilon_greedy_policy(std::vector<doubl
 }
 
 void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std::string checkpoint) {
-    double EPSILON_INIT = 1.00;
-    double EPSILON_MIN = 0.10;
-    double EPSILON_DECAY = 0.999;
+    double EPSILON_INIT = 0.50;
+    double EPSILON_MIN = 0.01;
+    double EPSILON_DECAY = 0.99;
     double EPSILON = EPSILON_INIT;
 
     double GAMMA = 0.30;
@@ -89,15 +92,14 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
     std::vector<double> reward_memory;
     std::vector<std::vector<double>> next_state_memory;
 
-    unsigned int ITERATION = 1;
-    unsigned int BATCH_SIZE = 512;
+    unsigned int BATCH_SIZE = 64;
 
-    double ALPHA_INIT = 0.0001;
+    double ALPHA_INIT = 0.001;
     double ALPHA_MIN = 0.00001;
     double ALPHA_DECAY = 0.999;
     double ALPHA = ALPHA_INIT;
 
-    unsigned int SYNC_INTERVAL = 1000;
+    unsigned int SYNC_INTERVAL = 10000;
 
     unsigned int LOOK_BACK = 50;
 
@@ -151,48 +153,40 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
         }
 
         if(state_memory.size() == MEMORY_CAPACITY) {
-            double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * t / (asset.size() - LOOK_BACK);
-            EPSILON = EPSILON_INIT * pow(EPSILON_DECAY, epsilon_decay_exp);
-
-            double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / log10(ALPHA_DECAY) * t / (asset.size() - LOOK_BACK);
-            ALPHA = ALPHA_INIT * pow(ALPHA_DECAY, alpha_decay_exp);
-
             std::vector<unsigned int> index(MEMORY_CAPACITY, 0);
             std::iota(index.begin(), index.end(), 0);
             std::shuffle(index.begin(), index.end(), seed);
             index.erase(index.begin() + BATCH_SIZE, index.end());
 
-            for(unsigned int itr = 1; itr <= ITERATION; itr++) {
-                for(unsigned int k: index) {
-                    std::vector<double> agent_q = agent.predict(state_memory[k]);
-                    for(int l = agent.num_of_layers() - 1; l >= 0; l--) {
-                        unsigned int start = 0, end = agent.layer(l)->out_features();
-                        if(l == agent.num_of_layers() - 1) {
-                            start = action_memory[k];
-                            end = start + 1;
-                        }
+            for(unsigned int k: index) {
+                std::vector<double> agent_q = agent.predict(state_memory[k]);
+                for(int l = agent.num_of_layers() - 1; l >= 0; l--) {
+                    unsigned int start = 0, end = agent.layer(l)->out_features();
+                    if(l == agent.num_of_layers() - 1) {
+                        start = action_memory[k];
+                        end = start + 1;
+                    }
 
-                        double partial_gradient = 0.00, gradient = 0.00;
-                        for(unsigned int n = start; n < end; n++) {
-                            if(l == agent.num_of_layers() - 1)
-                                partial_gradient = -2.00 * (reward_memory[k] - agent_q[n]);
-                            else
-                                partial_gradient = agent.layer(l)->node(n)->err() * relu_prime(agent.layer(l)->node(n)->sum());
+                    double partial_gradient = 0.00, gradient = 0.00;
+                    for(unsigned int n = start; n < end; n++) {
+                        if(l == agent.num_of_layers() - 1)
+                            partial_gradient = -2.00 * (reward_memory[k] - agent_q[n]);
+                        else
+                            partial_gradient = agent.layer(l)->node(n)->err() * relu_prime(agent.layer(l)->node(n)->sum());
 
-                            double updated_bias = agent.layer(l)->node(n)->bias() - ALPHA * partial_gradient;
-                            agent.layer(l)->node(n)->set_bias(updated_bias);
+                        double updated_bias = agent.layer(l)->node(n)->bias() - ALPHA * partial_gradient;
+                        agent.layer(l)->node(n)->set_bias(updated_bias);
 
-                            for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
-                                if(l == 0)
-                                    gradient = partial_gradient * state_memory[k][i];
-                                else {
-                                    gradient = partial_gradient * agent.layer(l-1)->node(i)->act();
-                                    agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
-                                }
-
-                                double updated_weight = agent.layer(l)->node(n)->weight(i) - ALPHA * gradient;
-                                agent.layer(l)->node(n)->set_weight(i, updated_weight);
+                        for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
+                            if(l == 0)
+                                gradient = partial_gradient * state_memory[k][i];
+                            else {
+                                gradient = partial_gradient * agent.layer(l-1)->node(i)->act();
+                                agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
                             }
+
+                            double updated_weight = agent.layer(l)->node(n)->weight(i) - ALPHA * gradient;
+                            agent.layer(l)->node(n)->set_weight(i, updated_weight);
                         }
                     }
                 }
@@ -204,6 +198,12 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
             next_state_memory.erase(next_state_memory.begin(), next_state_memory.begin() + 1);
 
             training_count++;
+
+            double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * training_count / (asset.size() - LOOK_BACK - MEMORY_CAPACITY);
+            EPSILON = EPSILON_INIT * pow(EPSILON_DECAY, epsilon_decay_exp);
+
+            double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / log10(ALPHA_DECAY) * training_count / (asset.size() - LOOK_BACK - MEMORY_CAPACITY);
+            ALPHA = ALPHA_INIT * pow(ALPHA_DECAY, alpha_decay_exp);
         }
 
         if(t % SYNC_INTERVAL == 0) {

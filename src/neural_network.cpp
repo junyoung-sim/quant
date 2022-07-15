@@ -23,7 +23,6 @@ void NeuralNetwork::add_layer(unsigned int in, unsigned int out) {
 
 void NeuralNetwork::initialize(std::default_random_engine &seed) {
     std::normal_distribution<double> std_normal(0.0, 1.0);
-    // He-initialization
     for(Layer &layer: layers) {
         for(unsigned int n = 0; n < layer.out_features(); n++) {
             for(unsigned int i = 0; i < layer.in_features(); i++)
@@ -42,7 +41,6 @@ Layer *NeuralNetwork::layer(unsigned int index) {
 
 std::vector<double> NeuralNetwork::predict(std::vector<double> &x) {
     std::vector<double> yhat;
-    // fully-connected feedforward
     for(unsigned int l = 0; l < layers.size(); l++) {
         for(unsigned int n = 0; n < layers[l].out_features(); n++) {
             double matmul = 0.00;
@@ -54,7 +52,7 @@ std::vector<double> NeuralNetwork::predict(std::vector<double> &x) {
             }
 
             layers[l].node(n)->init();
-           layers[l].node(n)->set_sum(matmul + layers[l].node(n)->bias());
+            layers[l].node(n)->set_sum(matmul + layers[l].node(n)->bias());
 
             if(l == layers.size() - 1)
                 yhat.push_back(layers[l].node(n)->sum()); // output layer (q-values)
