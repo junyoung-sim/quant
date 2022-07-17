@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
+import sys
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-fig = plt.figure()
-
-def graph(i):
+def main():
+    ticker = sys.argv[1]
     mean_loss = []
     buy_and_hold = []
     model_return = []
+
     for line in open("./data/log", "r"):
         if line != '\n':
             mean_loss.append(float(line.split(" ")[0]))
@@ -17,18 +18,21 @@ def graph(i):
 
     t = [i for i in range(len(mean_loss))]
 
-    plt.subplot(1, 2, 1)
+    plt.figure(figsize=(15,5))
+
+    plt.subplot(1, 3, 1)
     plt.plot(t, mean_loss, color="blue")
     plt.title("Mean Q-Value Loss")
 
-    plt.subplot(1, 2, 2)
+    plt.subplot(1, 3, 2)
     plt.plot(t, buy_and_hold, color="green")
-    plt.plot(t, model_return, color="orange")
-    plt.title("Cumulative Return")
+    plt.title("Cumulative Return (Benchmark)")
 
-def main():
-    ani = animation.FuncAnimation(fig, graph, save_count=0, cache_frame_data=False)
-    plt.show()
+    plt.subplot(1, 3, 3)
+    plt.plot(t, model_return, color="orange")
+    plt.title("Cumulative Return (Model)")
+
+    plt.savefig("./res/{}.png" .format(ticker))
 
 if __name__ == "__main__":
     main()

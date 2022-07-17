@@ -29,39 +29,11 @@ void Trader::sync() {
 }
 
 bool Trader::sample_state(std::vector<double> &asset, std::vector<double> &vix, unsigned int t, unsigned int look_back, std::vector<double> &state) {
-    std::vector<double> asset_price = {asset.begin() + t, asset.begin() + t + look_back};
-    std::vector<double> asset_fast_ema = exponential_moving_average(asset_price, 3);
-    std::vector<double> asset_slow_ema = exponential_moving_average(asset_price, 10);
-
-    std::vector<double> vix_signal = {vix.begin() + t, vix.begin() + t + look_back};
-    std::vector<double> vix_sosc_ema = stochastic_oscillator(vix_signal, 10, 10);
-
-    std::vector<unsigned int> size = {static_cast<unsigned int>(asset_price.size()),
-                                      static_cast<unsigned int>(asset_fast_ema.size()),
-                                      static_cast<unsigned int>(asset_slow_ema.size()),
-                                      static_cast<unsigned int>(vix_signal.size()),
-                                      static_cast<unsigned int>(vix_sosc_ema.size())};
-    unsigned int min_size = *std::min_element(size.begin(), size.end());
-
-    asset_price.erase(asset_price.begin(), asset_price.begin() + (asset_price.size() - min_size));
-    asset_fast_ema.erase(asset_fast_ema.begin(), asset_fast_ema.begin() + (asset_fast_ema.size() - min_size));
-    asset_slow_ema.erase(asset_slow_ema.begin(), asset_slow_ema.begin() + (asset_slow_ema.size() - min_size));
-    vix_signal.erase(vix_signal.begin(), vix_signal.begin() + (vix_signal.size() - min_size));
-    vix_sosc_ema.erase(vix_sosc_ema.begin(), vix_sosc_ema.begin() + (vix_sosc_ema.size() - min_size));
-
+    std::vector<double> asset_price = {asset.begin() + t - look_back + 1, asset.begin() + t + 1};
     standardize(asset_price);
-    standardize(asset_fast_ema);
-    standardize(asset_slow_ema);
-    standardize(vix_signal);
-    standardize(vix_sosc_ema);
-
     state.insert(state.end(), asset_price.begin(), asset_price.end());
-    state.insert(state.end(), asset_fast_ema.begin(), asset_fast_ema.end());
-    state.insert(state.end(), asset_slow_ema.begin(), asset_slow_ema.end());
-    state.insert(state.end(), vix_signal.begin(), vix_signal.end());
-    state.insert(state.end(), vix_sosc_ema.begin(), vix_sosc_ema.end());
 
-    return t + look_back == asset.size() - 1;
+    return t + 1 == asset.size() - 1;
 }
 
 std::tuple<unsigned int, double> Trader::epsilon_greedy_policy(std::vector<double> &state, double EPSILON) {
@@ -78,36 +50,21 @@ std::tuple<unsigned int, double> Trader::epsilon_greedy_policy(std::vector<doubl
     return action_q;
 }
 
-void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std::string checkpoint) {
-    double EPSILON_INIT = 0.50;
-    double EPSILON_MIN = 0.01;
-    double EPSILON_DECAY = 0.99;
+void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, double EPSILON_INIT, double EPSILON_MIN, double ALPHA_INIT, double ALPHA_MIN,
+                      double GAMMA, unsigned int MEMORY_CAPACITY, unsigned int BATCH_SIZE, unsigned int SYNC_INTERVAL, unsigned int LOOK_BACK, std::string checkpoint) {
     double EPSILON = EPSILON_INIT;
+    double ALPHA = ALPHA_INIT;
 
-    double GAMMA = 0.30;
-
-    unsigned int MEMORY_CAPACITY = 50000;
     std::vector<std::vector<double>> state_memory;
     std::vector<unsigned int> action_memory;
     std::vector<double> reward_memory;
     std::vector<std::vector<double>> next_state_memory;
 
-    unsigned int BATCH_SIZE = 64;
-
-    double ALPHA_INIT = 0.001;
-    double ALPHA_MIN = 0.00001;
-    double ALPHA_DECAY = 0.999;
-    double ALPHA = ALPHA_INIT;
-
-    unsigned int SYNC_INTERVAL = 10000;
-
-    unsigned int LOOK_BACK = 50;
-
     unsigned int training_count = 0;
     double loss_sum = 0.00, mean_loss = 0.00;
     double buy_and_hold = 1.00, model_return = 1.00;
 
-    for(unsigned int t = 0; t <= asset.size() - LOOK_BACK - 1; t++) {
+    for(unsigned int t = LOOK_BACK - 1; t <= asset.size() - 2; t++) {
         std::vector<double> state;
         bool terminal = sample_state(asset, vix, t, LOOK_BACK, state);
 
@@ -115,7 +72,7 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
         unsigned int action = std::get<0>(action_q);
         double q_value = std::get<1>(action_q);
 
-        double diff = (asset[t+LOOK_BACK] - asset[t+LOOK_BACK-1]) / asset[t+LOOK_BACK-1];
+        double diff = (asset[t+1] - asset[t]) / asset[t];
         double observed_reward;
         if(action == LONG)
             observed_reward = diff;
@@ -123,8 +80,6 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
             observed_reward = -1.00 * diff;
         else
             observed_reward = 0.00;
-
-        std::cout << "@frame=" << t << ": action = " << action << ", observed reward = " << observed_reward << "\n";
 
         double expected_reward = observed_reward;
         if(!terminal) {
@@ -136,6 +91,9 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
 
             next_state_memory.push_back(next_state);
         }
+
+//        std::cout << "@frame" << t << ": ";
+//        std::cout << "(diff = " << diff << ") (action = " << action << ") (observed = " << observed_reward << ") (expected = " << expected_reward << ")\n";
 
         state_memory.push_back(state);
         action_memory.push_back(action);
@@ -199,11 +157,8 @@ void Trader::optimize(std::vector<double> &asset, std::vector<double> &vix, std:
 
             training_count++;
 
-            double epsilon_decay_exp = log10(EPSILON_MIN / EPSILON_INIT) / log10(EPSILON_DECAY) * training_count / (asset.size() - LOOK_BACK - MEMORY_CAPACITY);
-            EPSILON = EPSILON_INIT * pow(EPSILON_DECAY, epsilon_decay_exp);
-
-            double alpha_decay_exp = log10(ALPHA_MIN / ALPHA_INIT) / log10(ALPHA_DECAY) * training_count / (asset.size() - LOOK_BACK - MEMORY_CAPACITY);
-            ALPHA = ALPHA_INIT * pow(ALPHA_DECAY, alpha_decay_exp);
+            EPSILON = (EPSILON_MIN - EPSILON_INIT) / (asset.size() - LOOK_BACK - 2 - MEMORY_CAPACITY) * training_count + EPSILON_INIT;
+            ALPHA = (ALPHA_MIN - ALPHA_INIT) / (asset.size() - LOOK_BACK - 2 - MEMORY_CAPACITY) * training_count + ALPHA_INIT;
         }
 
         if(t % SYNC_INTERVAL == 0) {

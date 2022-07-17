@@ -115,8 +115,7 @@ std::vector<double> stochastic_oscillator(std::vector<double> &series, unsigned 
         double max = *std::max_element(series_t.begin(), series_t.end());
         double min = *std::min_element(series_t.begin(), series_t.end());
 
-        for(unsigned int k = t; k < t + k_period; k++)
-            sosc.push_back((series[k] - min) / (max - min));
+        sosc.push_back((series_t[k_period - 1] - min) / (max - min));
     }
 
     std::vector<double> sosc_ema = exponential_moving_average(sosc, d_period);

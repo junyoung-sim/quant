@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 
+import sys
 import pandas as pd
-import datetime as datetime
 
 def main():
-    asset = pd.read_csv("./data/SPXL_5min.csv")
-    vix = pd.read_csv("./data/VIX_5min.csv")
+    ticker = sys.argv[1]
+    asset = pd.read_csv("./data/{}.csv" .format(ticker))
+    vix = pd.read_csv("./data/^VIX.csv")
 
-    market_time = pd.to_timedelta(['09:30:00', '16:00:00'])
-    timestamp = pd.to_timedelta(asset["Date-Time"].str.split().str[1])
-    asset = asset.loc[(timestamp >= market_time[0]) & (timestamp <= market_time[1])]
+    asset = asset.loc[asset["Date"].isin(vix["Date"])]
+    vix = vix.loc[vix["Date"].isin(asset["Date"])]
 
-    vix = vix.loc[vix["Date-Time"].isin(asset["Date-Time"])]
-    asset = asset.loc[asset["Date-Time"].isin(vix["Date-Time"])]
-
-    asset.to_csv("./data/SPXL_5min_adjusted.csv", index=False)
-    vix.to_csv("./data/VIX_5min_adjusted.csv", index=False)
+    asset.to_csv("./data/{}_adjusted.csv" .format(ticker), index=False)
+    vix.to_csv("./data/^VIX_adjusted.csv", index=False)
 
 if __name__ == "__main__":
     main()
