@@ -21,7 +21,7 @@ void NeuralNetwork::add_layer(unsigned int in, unsigned int out) {
     layers.push_back(Layer(in, out));
 }
 
-void NeuralNetwork::initialize(std::default_random_engine &seed) {
+void NeuralNetwork::init(std::default_random_engine &seed) {
     std::normal_distribution<double> std_normal(0.0, 1.0);
     for(Layer &layer: layers) {
         for(unsigned int n = 0; n < layer.out_features(); n++) {

@@ -1,15 +1,12 @@
 COMPILER=g++
 VERSION=-std=c++11
 
-output: main.o data.o node.o layer.o neural_network.o checkpoint.o trader.o
-	$(COMPILER) $(VERSION) main.o data.o node.o layer.o neural_network.o checkpoint.o trader.o -o exec
+output: main.o node.o layer.o neural_network.o checkpoint.o data.o quant.o
+	$(COMPILER) $(VERSION) main.o node.o layer.o neural_network.o checkpoint.o data.o quant.o -o exec
 	rm *.o
 
 main.o: ./src/main.cpp
 	$(COMPILER) $(VERSION) -c ./src/main.cpp
-
-data.o: ./src/data.cpp
-	$(COMPILER) $(VERSION) -c ./src/data.cpp
 
 node.o: ./src/node.cpp
 	$(COMPILER) $(VERSION) -c ./src/node.cpp
@@ -23,5 +20,8 @@ neural_network.o: ./src/neural_network.cpp
 checkpoint.o: ./src/checkpoint.cpp
 	$(COMPILER) $(VERSION) -c ./src/checkpoint.cpp
 
-trader.o: ./src/trader.cpp
-	$(COMPILER) $(VERSION) -c ./src/trader.cpp
+data.o: ./src/data.cpp
+	$(COMPILER) $(VERSION) -c ./src/data.cpp
+
+quant.o: ./src/quant.cpp
+	$(COMPILER) $(VERSION) -c ./src/quant.cpp

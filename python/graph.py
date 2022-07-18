@@ -1,38 +1,45 @@
 #!/usr/bin/env python3
 
-import sys
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 
 def main():
-    ticker = sys.argv[1]
-    mean_loss = []
-    buy_and_hold = []
-    model_return = []
+    loss = []
+    benchmark = []
+    model = []
+    eps = []
+    alpha = []
 
-    for line in open("./data/log", "r"):
-        if line != '\n':
-            mean_loss.append(float(line.split(" ")[0]))
-            buy_and_hold.append(float(line.split(" ")[1]))
-            model_return.append(float(line.split(" ")[2]))
+    for line in open("./data/log", "r").readlines():
+        if line != "\n":
+            loss.append(float(line.split(" ")[0]))
+            benchmark.append(float(line.split(" ")[1]))
+            model.append(float(line.split(" ")[2]))
+            eps.append(float(line.split(" ")[3]))
+            alpha.append(float(line.split(" ")[4]))
 
-    t = [i for i in range(len(mean_loss))]
+    t = [i for i in range(len(loss))]
 
-    plt.figure(figsize=(15,5))
+    plt.figure(figsize=(15,8))
 
-    plt.subplot(1, 3, 1)
-    plt.plot(t, mean_loss, color="blue")
+    plt.subplot(2, 2, 1)
+    plt.plot(t, loss, color="blue")
     plt.title("Mean Q-Value Loss")
 
-    plt.subplot(1, 3, 2)
-    plt.plot(t, buy_and_hold, color="green")
-    plt.title("Cumulative Return (Benchmark)")
+    plt.subplot(2, 2, 2)
+    plt.plot(t, eps, color="blue")
+    plt.title("Epsilon")
 
-    plt.subplot(1, 3, 3)
-    plt.plot(t, model_return, color="orange")
-    plt.title("Cumulative Return (Model)")
+    plt.subplot(2, 2, 3)
+    plt.plot(t, alpha, color="blue")
+    plt.title("Alpha")
 
-    plt.savefig("./res/{}.png" .format(ticker))
+    plt.subplot(2, 2, 4)
+    plt.plot(t, benchmark, color="green")
+    plt.plot(t, model, color="orange")
+    plt.title("Cumulative Return")
+
+    plt.savefig("./res/results.png")
 
 if __name__ == "__main__":
     main()
+

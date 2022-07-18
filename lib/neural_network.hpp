@@ -23,7 +23,7 @@ public:
     ~NeuralNetwork() {}
 
     void add_layer(unsigned int in, unsigned int out);
-    void initialize(std::default_random_engine &seed);
+    void init(std::default_random_engine &seed);
 
     unsigned int num_of_layers();
     Layer *layer(unsigned int index);

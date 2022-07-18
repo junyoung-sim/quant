@@ -75,6 +75,14 @@ void standardize(std::vector<double> &series) {
         val = (val - mean) / std;
 }
 
+void range_normalize(std::vector<double> &series) {
+    double max = *std::max_element(series.begin(), series.end());
+    double min = *std::min_element(series.begin(), series.end());
+
+    for(double &val: series)
+        val = (val - min) / (max - min);
+}
+
 std::vector<double> exponential_moving_average(std::vector<double> &series, unsigned int periods) {
     std::vector<double> weights;
     double weight_count = 0.00;
