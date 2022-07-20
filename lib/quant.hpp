@@ -43,7 +43,7 @@ public:
     void sync();
 
     bool sample_state(std::vector<double> &asset, std::vector<double> &vix, unsigned int t, unsigned int look_back, std::vector<double> &state);
-    std::vector<unsigned int> eps_greedy_policy(std::vector<double> &state, double eps);
+    unsigned int eps_greedy_policy(std::vector<double> &state, double eps);
 
     void optimize(std::vector<double> &asset, std::vector<double> &vix, double eps_init, double eps_min, double alpha_init, double alpha_min,
                   double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval, unsigned int look_back, std::string checkpoint);

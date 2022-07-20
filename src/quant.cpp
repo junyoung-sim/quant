@@ -82,21 +82,18 @@ bool Quant::sample_state(std::vector<double> &asset, std::vector<double> &vix, u
     return t + 1 == asset.size() - 1;
 }
 
-std::vector<unsigned int> Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
-    unsigned int action, action_type;
+unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
+    unsigned int action;
     double explore = (double)rand() / RAND_MAX;
 
-    if(explore < eps) {
+    if(explore < eps)
         action = rand() % agent.layer(agent.num_of_layers() - 1)->out_features();
-        action_type = 0;
-    }
     else {
         std::vector<double> agent_q = agent.predict(state);
         action = std::max_element(agent_q.begin(), agent_q.end()) - agent_q.begin();
-        action_type = 1;
     }
 
-    return std::vector<unsigned int>({action, action_type});
+    return action;
 }
 
 void Quant::optimize(std::vector<double> &asset, std::vector<double> &vix, double eps_init, double eps_min, double alpha_init, double alpha_min,
@@ -113,9 +110,7 @@ void Quant::optimize(std::vector<double> &asset, std::vector<double> &vix, doubl
     for(unsigned int t = look_back - 1; t <= asset.size() - 2; t++) {
         std::vector<double> state;
         bool terminal = sample_state(asset, vix, t, look_back, state);
-
-        std::vector<unsigned int> act = eps_greedy_policy(state, eps);
-        unsigned int action = act[0], action_type = act[1];
+        unsigned int action = eps_greedy_policy(state, eps);
 
         double diff = (asset[t+1] - asset[t]) / asset[t];
         double observed_reward;
