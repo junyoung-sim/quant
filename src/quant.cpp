@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <chrono>
 
 #include "../lib/data.hpp"
 #include "../lib/quant.hpp"
@@ -19,6 +20,7 @@ void Quant::init(std::vector<std::vector<unsigned int>> shape) {
         target.add_layer(in, out);
     }
 
+    seed.seed(std::chrono::system_clock::now().time_since_epoch().count());
     agent.init(seed);
     sync();
 }
