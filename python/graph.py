@@ -39,6 +39,7 @@ def main():
     plt.title("Cumulative Return")
 
     plt.savefig("./res/results.png")
+    plt.show()
 
 if __name__ == "__main__":
     main()

@@ -36,50 +36,11 @@ void Quant::sync() {
     }
 }
 
-bool Quant::sample_state(std::vector<double> &asset, std::vector<double> &vix, unsigned int t, unsigned int look_back, std::vector<double> &state) {
-    std::vector<double> asset_price = {asset.begin(), asset.begin() + t + 1};
-    std::vector<double> asset_macd = moving_average_convergence_divergence(asset_price, 12, 29);
-    std::vector<double> asset_macd_signal = exponential_moving_average(asset_price, 9);
-    std::vector<double> asset_sosc_ema = stochastic_oscillator(asset_price, 10, 10);
+bool Quant::sample_state(std::vector<double> &asset, unsigned int t, std::vector<double> &state) {
+    std::vector<double> price = {asset.begin(), asset.begin() + t + 1};
+    standardize(price);
 
-    std::vector<double> vix_price = {vix.begin(), vix.begin() + t + 1};
-    std::vector<double> vix_sosc_ema = stochastic_oscillator(vix_price, 10, 10);
-
-    range_normalize(asset_price);
-    range_normalize(asset_macd);
-    range_normalize(asset_macd_signal);
-    range_normalize(asset_sosc_ema);
-    range_normalize(vix_price);
-    range_normalize(vix_sosc_ema);
-
-    std::vector<double> asset_price_t = {asset_price.end() - look_back, asset_price.end()};
-    std::vector<double> asset_macd_t = {asset_macd.end() - look_back, asset_macd.end()};
-    std::vector<double> asset_macd_signal_t = {asset_macd_signal.end() - look_back, asset_macd_signal.end()};
-    std::vector<double> asset_sosc_ema_t = {asset_sosc_ema.end() - look_back, asset_sosc_ema.end()};
-    std::vector<double> vix_price_t = {vix_price.end() - look_back, vix_price.end()};
-    std::vector<double> vix_sosc_ema_t = {vix_sosc_ema.end() - look_back, vix_sosc_ema.end()};
-
-    std::vector<unsigned int> size = {static_cast<unsigned int>(asset_price_t.size()),
-                                      static_cast<unsigned int>(asset_macd_t.size()),
-                                      static_cast<unsigned int>(asset_macd_signal_t.size()),
-                                      static_cast<unsigned int>(asset_sosc_ema_t.size()),
-                                      static_cast<unsigned int>(vix_price_t.size()),
-                                      static_cast<unsigned int>(vix_sosc_ema_t.size())};
-    unsigned int min = *std::min_element(size.begin(), size.end());
-
-    asset_price_t.erase(asset_price_t.begin(), asset_price_t.begin() + (asset_price_t.size() - min));
-    asset_macd_t.erase(asset_macd_t.begin(), asset_macd_t.begin() + (asset_macd_t.size() - min));
-    asset_macd_signal_t.erase(asset_macd_signal_t.begin(), asset_macd_signal_t.begin() + (asset_macd_signal_t.size() - min));
-    asset_sosc_ema_t.erase(asset_sosc_ema_t.begin(), asset_sosc_ema_t.begin() + (asset_sosc_ema_t.size() - min));
-    vix_price_t.erase(vix_price_t.begin(), vix_price_t.begin() + (vix_price_t.size() - min));
-    vix_sosc_ema_t.erase(vix_sosc_ema_t.begin(), vix_sosc_ema_t.begin() + (vix_sosc_ema_t.size() - min));
-
-    state.insert(state.end(), asset_price_t.begin(), asset_price_t.end());
-    state.insert(state.end(), asset_macd_t.begin(), asset_macd_t.end());
-    state.insert(state.end(), asset_macd_signal_t.begin(), asset_macd_signal_t.end());
-    state.insert(state.end(), asset_sosc_ema_t.begin(), asset_sosc_ema_t.end());
-    state.insert(state.end(), vix_price_t.begin(), vix_price_t.end());
-    state.insert(state.end(), vix_sosc_ema_t.begin(), vix_sosc_ema_t.end());
+    state.insert(state.end(), price.end() - 15, price.end());
 
     return t + 1 == asset.size() - 1;
 }
@@ -98,8 +59,8 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
     return action;
 }
 
-void Quant::optimize(std::vector<double> &asset, std::vector<double> &vix, double eps_init, double eps_min, double alpha_init, double alpha_min,
-                     double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval, unsigned int look_back, std::string checkpoint) {
+void Quant::optimize(std::vector<double> &asset, double eps_init, double eps_min, double alpha_init, double alpha_min,
+                     double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval, std::string checkpoint) {
     double eps = eps_init;
     double alpha = alpha_init;
 
@@ -109,9 +70,10 @@ void Quant::optimize(std::vector<double> &asset, std::vector<double> &vix, doubl
     double loss_sum = 0.00, mean_loss = 0.00;
     double benchmark = 1.00, model = 1.00;
 
-    for(unsigned int t = look_back - 1; t <= asset.size() - 2; t++) {
+    unsigned int start = 14;
+    for(unsigned int t = start; t <= asset.size() - 2; t++) {
         std::vector<double> state;
-        bool terminal = sample_state(asset, vix, t, look_back, state);
+        bool terminal = sample_state(asset, t, state);
         unsigned int action = eps_greedy_policy(state, eps);
 
         double diff = (asset[t+1] - asset[t]) / asset[t];
@@ -126,7 +88,7 @@ void Quant::optimize(std::vector<double> &asset, std::vector<double> &vix, doubl
         double expected_reward = observed_reward;
         if(!terminal) {
             std::vector<double> next_state;
-            sample_state(asset, vix, t+1, look_back, next_state);
+            sample_state(asset, t+1, next_state);
 
             std::vector<double> target_q = target.predict(next_state);
             expected_reward += gamma * *std::max_element(target_q.begin(), target_q.end());
@@ -192,14 +154,12 @@ void Quant::optimize(std::vector<double> &asset, std::vector<double> &vix, doubl
             replay_memory.erase(replay_memory.begin(), replay_memory.begin() + 1);
 
             training_count++;
-            eps = (eps_min - eps_init) / (asset.size() - look_back - 2 - memory_capacity) * training_count + eps_init;
-            alpha = (alpha_min - alpha_init) / (asset.size() - look_back - 2 - memory_capacity) * training_count + alpha_init;
+            eps = (eps_min - eps_init) / (asset.size() - start - 1 - memory_capacity) * training_count + eps_init;
+            alpha = (alpha_min - alpha_init) / (asset.size() - start - 1 - memory_capacity) * training_count + alpha_init;
 
             if(training_count % sync_interval == 0) {
                 sync();
                 save(checkpoint);
-
-                std::system("./python/graph.py");
             }
         }
     }
