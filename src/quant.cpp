@@ -37,10 +37,13 @@ void Quant::sync() {
 }
 
 bool Quant::sample_state(std::vector<double> &asset, unsigned int t, std::vector<double> &state) {
-    std::vector<double> price = {asset.begin(), asset.begin() + t + 1};
+    std::vector<double> price = {asset.begin() + t - 49, asset.begin() + t + 1};
     standardize(price);
 
-    state.insert(state.end(), price.end() - 15, price.end());
+    for(unsigned int i = price.size(); i >= 10; i -= 10)
+        state.push_back(price[price.size() - i]);
+
+    state.insert(state.end(), price.end() - 5, price.end());
 
     return t + 1 == asset.size() - 1;
 }
@@ -70,10 +73,11 @@ void Quant::optimize(std::vector<double> &asset, double eps_init, double eps_min
     double loss_sum = 0.00, mean_loss = 0.00;
     double benchmark = 1.00, model = 1.00;
 
-    unsigned int start = 14;
+    unsigned int start = 49;
     for(unsigned int t = start; t <= asset.size() - 2; t++) {
         std::vector<double> state;
         bool terminal = sample_state(asset, t, state);
+
         unsigned int action = eps_greedy_policy(state, eps);
 
         double diff = (asset[t+1] - asset[t]) / asset[t];

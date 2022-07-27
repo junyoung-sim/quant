@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import sys
 import matplotlib.pyplot as plt
 
 def main():
+    label = sys.argv[1]
     loss = []
     benchmark = []
     model = []
@@ -38,8 +40,7 @@ def main():
     plt.plot(t, model, color="orange")
     plt.title("Cumulative Return")
 
-    plt.savefig("./res/results.png")
-    plt.show()
+    plt.savefig("./res/{}.png" .format(label))
 
 if __name__ == "__main__":
     main()

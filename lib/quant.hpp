@@ -35,7 +35,7 @@ private:
     std::default_random_engine seed;
 public:
     Quant() {
-        init({{15,15},{15,5},{5,3}});
+        init({{10,10},{10,5},{5,3}});
     }
     ~Quant() {}
 
