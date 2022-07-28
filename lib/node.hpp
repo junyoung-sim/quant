@@ -18,7 +18,9 @@ public:
         b = 0.00;
         w = std::vector<double>(in, 0.00);
     }
-    ~Node() {}
+    ~Node() {
+        std::vector<double>().swap(w);
+    }
 
     double bias();
     double sum();

@@ -37,13 +37,14 @@ void Quant::sync() {
 }
 
 bool Quant::sample_state(std::vector<double> &asset, unsigned int t, std::vector<double> &state) {
-    std::vector<double> price = {asset.begin() + t - 49, asset.begin() + t + 1};
+    std::vector<double> price = {asset.begin() + t - 29, asset.begin() + t + 1};
     standardize(price);
 
-    for(unsigned int i = price.size(); i >= 10; i -= 10)
+    for(unsigned int i = 30; i >= 3; i -= 3)
         state.push_back(price[price.size() - i]);
+    state.push_back(price[price.size() - 1]);
 
-    state.insert(state.end(), price.end() - 5, price.end());
+    std::vector<double>().swap(price);
 
     return t + 1 == asset.size() - 1;
 }
@@ -57,6 +58,8 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
     else {
         std::vector<double> agent_q = agent.predict(state);
         action = std::max_element(agent_q.begin(), agent_q.end()) - agent_q.begin();
+
+        std::vector<double>().swap(agent_q);
     }
 
     return action;
@@ -73,7 +76,7 @@ void Quant::optimize(std::vector<double> &asset, double eps_init, double eps_min
     double loss_sum = 0.00, mean_loss = 0.00;
     double benchmark = 1.00, model = 1.00;
 
-    unsigned int start = 49;
+    unsigned int start = 29;
     for(unsigned int t = start; t <= asset.size() - 2; t++) {
         std::vector<double> state;
         bool terminal = sample_state(asset, t, state);
@@ -96,6 +99,9 @@ void Quant::optimize(std::vector<double> &asset, double eps_init, double eps_min
 
             std::vector<double> target_q = target.predict(next_state);
             expected_reward += gamma * *std::max_element(target_q.begin(), target_q.end());
+
+            std::vector<double>().swap(next_state);
+            std::vector<double>().swap(target_q);
         }
 
         if(training_count > 0) {
@@ -109,11 +115,15 @@ void Quant::optimize(std::vector<double> &asset, double eps_init, double eps_min
             std::ofstream out("./data/log", std::ios::app);
             out << mean_loss << " " << benchmark << " " << model << " " << eps << " " << alpha << "\n";
             out.close();
+
+            std::vector<double>().swap(agent_q);
         }
 
         std::cout << "@frame=" << t << ": (diff=" << diff << ") (action=" << action << ") ";
         std::cout << "(observed=" << observed_reward << ") (expected=" << expected_reward << ") ";
         std::cout << "(benchmark=" << benchmark << ") (model=" << model << ")\n";
+
+        std::vector<double>().swap(state);
 
         replay_memory.push_back(Memory(state, action, expected_reward));
 
@@ -153,7 +163,11 @@ void Quant::optimize(std::vector<double> &asset, double eps_init, double eps_min
                         }
                     }
                 }
+
+                std::vector<double>().swap(agent_q);
             }
+
+            std::vector<unsigned int>().swap(index);
 
             replay_memory.erase(replay_memory.begin(), replay_memory.begin() + 1);
 
@@ -161,14 +175,14 @@ void Quant::optimize(std::vector<double> &asset, double eps_init, double eps_min
             eps = (eps_min - eps_init) / (asset.size() - start - 1 - memory_capacity) * training_count + eps_init;
             alpha = (alpha_min - alpha_init) / (asset.size() - start - 1 - memory_capacity) * training_count + alpha_init;
 
-            if(training_count % sync_interval == 0) {
+            if(training_count % sync_interval == 0 || t == asset.size() - 2) {
                 sync();
                 save(checkpoint);
             }
         }
     }
 
-    save(checkpoint);
+    std::vector<Memory>().swap(replay_memory);
 }
 
 void Quant::save(std::string checkpoint) {

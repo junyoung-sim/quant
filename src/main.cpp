@@ -23,5 +23,7 @@ int main(int argc, char *argv[])
     Quant quant;
     quant.optimize(asset, eps_init, eps_min, alpha_init, alpha_min, gamma, memory_capacity, batch_size, sync_interval, "./models/checkpoint");
 
+    std::vector<double>().swap(asset);
+
     return 0;
 }

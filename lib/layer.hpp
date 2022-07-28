@@ -17,7 +17,9 @@ public:
     Layer(unsigned int _in, unsigned int _out): in(_in), out(_out) {
         n = std::vector<Node>(out, Node(in));
     }
-    ~Layer() {}
+    ~Layer() {
+        std::vector<Node>().swap(n);
+    }
 
     Node *node(unsigned int index);
 

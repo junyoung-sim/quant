@@ -20,7 +20,9 @@ public:
         a = action;
         r = reward;
     }
-    ~Memory() {}
+    ~Memory() {
+        std::vector<double>().swap(s);
+    }
 
     std::vector<double> *state() { return &s; }
     unsigned int action() { return a; }
