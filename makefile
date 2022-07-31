@@ -1,27 +1,18 @@
-COMPILER=g++
-VERSION=-std=c++11
+COM=g++
+VER=-std=c++11
 
-output: main.o node.o layer.o neural_network.o checkpoint.o data.o quant.o
-	$(COMPILER) $(VERSION) main.o node.o layer.o neural_network.o checkpoint.o data.o quant.o -o exec
+output: main.o data.o net.o quant.o
+	$(COM) $(VER) main.o data.o net.o quant.o -o exec
 	rm *.o
 
 main.o: ./src/main.cpp
-	$(COMPILER) $(VERSION) -c ./src/main.cpp
-
-node.o: ./src/node.cpp
-	$(COMPILER) $(VERSION) -c ./src/node.cpp
-
-layer.o: ./src/layer.cpp
-	$(COMPILER) $(VERSION) -c ./src/layer.cpp
-
-neural_network.o: ./src/neural_network.cpp
-	$(COMPILER) $(VERSION) -c ./src/neural_network.cpp
-
-checkpoint.o: ./src/checkpoint.cpp
-	$(COMPILER) $(VERSION) -c ./src/checkpoint.cpp
+	$(COM) $(VER) -c ./src/main.cpp
 
 data.o: ./src/data.cpp
-	$(COMPILER) $(VERSION) -c ./src/data.cpp
+	$(COM) $(VER) -c ./src/data.cpp
+
+net.o: ./src/net.cpp
+	$(COM) $(VER) -c ./src/net.cpp
 
 quant.o: ./src/quant.cpp
-	$(COMPILER) $(VERSION) -c ./src/quant.cpp
+	$(COM) $(VER) -c ./src/quant.cpp

@@ -3,10 +3,11 @@
 
 #include <cstdlib>
 #include <vector>
-#include <string>
 #include <random>
+#include <string>
 
-#include "neural_network.hpp"
+#include "../lib/data.hpp"
+#include "../lib/net.hpp"
 
 class Memory
 {
@@ -15,10 +16,11 @@ private:
     unsigned int a;
     double r;
 public:
-    Memory(std::vector<double> &state, unsigned int action, double reward) {
+    Memory() {}
+    Memory(std::vector<double> &state, unsigned int action, double expected_reward) {
         s.swap(state);
         a = action;
-        r = reward;
+        r = expected_reward;
     }
     ~Memory() {
         std::vector<double>().swap(s);
@@ -26,7 +28,7 @@ public:
 
     std::vector<double> *state() { return &s; }
     unsigned int action() { return a; }
-    double reward() { return r; }
+    double expected_reward() { return r; }
 };
 
 class Quant
@@ -34,24 +36,17 @@ class Quant
 private:
     NeuralNetwork agent;
     NeuralNetwork target;
-    std::default_random_engine seed;
 public:
-    Quant() {
-        init({{10,10},{10,5},{5,3}});
-    }
+    Quant() {}
     ~Quant() {}
 
-    void init(std::vector<std::vector<unsigned int>> shape);
+    void init(std::vector<std::vector<unsigned int>> shape, std::default_random_engine &seed);
     void sync();
 
-    bool sample_state(std::vector<double> &asset, unsigned int t, std::vector<double> &state);
     unsigned int eps_greedy_policy(std::vector<double> &state, double eps);
-
-    void optimize(std::vector<double> &asset, double eps_init, double eps_min, double alpha_init, double alpha_min,
-                  double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval, std::string checkpoint);
-
-    void save(std::string checkpoint);
-    void load(std::string checkpoint);
+    void optimize(std::vector<double> &series, double eps_init, double eps_min, double alpha_init, double alpha_min, double gamma, unsigned int memory_capacity,
+                  unsigned int batch_size, unsigned int sync_interval, unsigned int look_back, std::string checkpoint, std::default_random_engine &seed);
+    void sgd(Memory &memory, double alpha);
 };
 
 #endif

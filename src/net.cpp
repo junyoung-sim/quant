@@ -3,9 +3,8 @@
 #include <vector>
 #include <string>
 #include <random>
-#include <cmath>
 
-#include "../lib/neural_network.hpp"
+#include "../lib/net.hpp"
 
 double relu(double x) {
     return x > 0.00 ? x : 0.00;
@@ -13,6 +12,68 @@ double relu(double x) {
 
 double relu_prime(double x) {
     return x > 0.00 ? 1.00 : 0.00;
+}
+
+// --- //
+
+double Node::bias() {
+    return b;
+}
+
+double Node::sum() {
+    return s;
+}
+
+double Node::act() {
+    return z;
+}
+
+double Node::err() {
+    return e;
+}
+
+double Node::weight(unsigned int index) {
+    return w[index];
+}
+
+void Node::init() {
+    s = 0.00;
+    z = 0.00;
+    e = 0.00;
+}
+
+void Node::set_bias(double val) {
+    b = val;
+}
+
+void Node::set_sum(double val) {
+    s = val;
+}
+
+void Node::set_act(double val) {
+    z = val;
+}
+
+void Node::add_err(double val) {
+    e += val;
+}
+
+void Node::set_weight(unsigned int index, double val) {
+    w[index] = val;
+}
+
+// --- //
+
+Node *Layer::node(unsigned int index) {
+    return &n[index];
+}
+
+unsigned int Layer::in_features() {
+    return in;
+}
+
+unsigned int Layer::out_features() {
+    return out;
 }
 
 // --- //
@@ -48,7 +109,7 @@ std::vector<double> NeuralNetwork::predict(std::vector<double> &x) {
                 if(l == 0)
                    matmul += x[i] * layers[l].node(n)->weight(i);
                 else
-                    matmul += layers[l-1].node(i)->act() * layers[l].node(n)->weight(i);
+                   matmul += layers[l-1].node(i)->act() * layers[l].node(n)->weight(i);
             }
 
             layers[l].node(n)->init();
@@ -63,4 +124,3 @@ std::vector<double> NeuralNetwork::predict(std::vector<double> &x) {
 
     return yhat;
 }
-
