@@ -14,7 +14,6 @@ void standardize(std::vector<double> &series);
 
 std::vector<double> simple_moving_average(std::vector<double> &series, unsigned int period);
 std::vector<double> exponential_moving_average(std::vector<double> &series, unsigned int period);
-std::vector<double> moving_expectation_value(std::vector<double> &series, unsigned int period);
 
 // --- //
 
