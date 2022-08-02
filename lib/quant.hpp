@@ -38,14 +38,17 @@ private:
     NeuralNetwork target;
 public:
     Quant() {}
+    Quant(std::default_random_engine &seed) {
+        init({{10,8},{8,4},{4,2}}, seed);
+    }
     ~Quant() {}
 
     void init(std::vector<std::vector<unsigned int>> shape, std::default_random_engine &seed);
     void sync();
 
     unsigned int eps_greedy_policy(std::vector<double> &state, double eps);
-    void optimize(std::vector<double> &series, double eps_init, double eps_min, double alpha_init, double alpha_min, double gamma, unsigned int memory_capacity,
-                  unsigned int batch_size, unsigned int sync_interval, unsigned int look_back, std::string checkpoint, std::default_random_engine &seed);
+    void optimize(std::vector<double> &series, double eps_init, double eps_min, double alpha_init, double alpha_min, double gamma,
+                  unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval, std::string checkpoint, std::default_random_engine &seed);
     void sgd(Memory &memory, double alpha);
 };
 

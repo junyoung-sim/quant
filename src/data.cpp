@@ -5,8 +5,6 @@
 #include <fstream>
 #include <cmath>
 
-#include <iostream>
-
 #include "../lib/data.hpp"
 
 std::vector<double> read_csv(std::string path, std::string column) {
@@ -75,61 +73,18 @@ void standardize(std::vector<double> &series) {
         val = (val - mean) / std_dev;
 }
 
-std::vector<double> simple_moving_average(std::vector<double> &series, unsigned int period) {
-    std::vector<double> sma;
-    for(unsigned int t = 0; t <= series.size() - period; t++) {
-        double sum = 0.00;
-        for(unsigned int i = t; i < t + period; i++)
-            sum += series[i];
-        sma.push_back(sum / period);
-    }
-
-    return sma;
-}
-
-std::vector<double> exponential_moving_average(std::vector<double> &series, unsigned int period) {
-    std::vector<double> weights;
-    double weight_sum = 0.00;
-    double smoothing = 2.00 / (period + 1);
-    for(unsigned int t = 0; t < period; t++) {
-        double weight = pow(1.00 - smoothing, period - 1 - t);
-        weights.push_back(weight);
-        weight_sum += weight;
-    }
-
-    std::vector<double> ema;
-    for(unsigned int t = 0; t <= series.size() - period; t++) {
-        double sum = 0.00;
-        for(unsigned int i = t; i < t + period; i++)
-            sum += series[i] * weights[i-t];
-        ema.push_back(sum / weight_sum);
-    }
-
-    std::vector<double>().swap(weights);
-
-    return ema;
-}
-
 // --- //
 
-std::vector<double> sample_state(std::vector<double> &series, unsigned int t, unsigned int look_back) {
-    std::vector<double> price = {series.begin() + t - look_back + 1, series.begin() + t + 1};
-
-    std::vector<double> fast_ema = exponential_moving_average(price, 10);
-    std::vector<double> slow_ema = exponential_moving_average(price, 50);
-
-    range_normalize(price);
-    range_normalize(fast_ema);
-    range_normalize(slow_ema);
+std::vector<double> sample_state(std::vector<double> &series, unsigned int t) {
+    std::vector<double> price = {series.begin() + t - 99, series.begin() + t + 1};
 
     std::vector<double> state;
-    state.push_back(price[price.size() - 1]);
-    state.push_back(fast_ema[fast_ema.size() - 1]);
-    state.push_back(slow_ema[slow_ema.size() - 1]);
+    for(unsigned int i = 0; i <= price.size() - 10; i += 10)
+        state.push_back(*std::max_element(price.begin() + i, price.begin() + i + 10));
+
+    range_normalize(state);
 
     std::vector<double>().swap(price);
-    std::vector<double>().swap(fast_ema);
-    std::vector<double>().swap(slow_ema);
 
     return state;
 }

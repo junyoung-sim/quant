@@ -49,9 +49,9 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
     return action;
 }
 
-void Quant::optimize(std::vector<double> &series, double eps_init, double eps_min, double alpha_init, double alpha_min, double gamma, unsigned int memory_capacity,
-                     unsigned int batch_size, unsigned int sync_interval, unsigned int look_back, std::string checkpoint, std::default_random_engine &seed) {
-    double eps = eps_init;
+void Quant::optimize(std::vector<double> &series, double eps_init, double eps_min, double alpha_init, double alpha_min, double gamma,
+                     unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval, std::string checkpoint, std::default_random_engine &seed) {
+    double eps = 1.00;
     double alpha = alpha_init;
 
     std::vector<Memory> memory;
@@ -60,11 +60,9 @@ void Quant::optimize(std::vector<double> &series, double eps_init, double eps_mi
     double loss_sum = 0.00, mean_loss = 0.00;
     double benchmark = 1.00, model = 1.00;
 
-    init({{3,3},{3,3},{3,3},{3,2}}, seed);
-
-    unsigned int start = look_back - 1;
+    unsigned int start = 99;
     for(unsigned int t = start; t <= series.size() - 2; t++) {
-        std::vector<double> state = sample_state(series, t, look_back);
+        std::vector<double> state = sample_state(series, t);
         unsigned int action = eps_greedy_policy(state, eps);
 
         double diff = (series[t+1] - series[t]) / series[t];
@@ -76,7 +74,7 @@ void Quant::optimize(std::vector<double> &series, double eps_init, double eps_mi
 
         double expected_reward = observed_reward;
         if(t != series.size() - 2) {
-            std::vector<double> next_state = sample_state(series, t+1, look_back);
+            std::vector<double> next_state = sample_state(series, t+1);
             std::vector<double> target_q = target.predict(next_state);
             expected_reward += gamma * *std::max_element(target_q.begin(), target_q.end());
 
