@@ -82,7 +82,7 @@ std::vector<double> sample_state(std::vector<double> &series, unsigned int t) {
     for(unsigned int i = 0; i <= price.size() - 10; i += 10)
         state.push_back(*std::max_element(price.begin() + i, price.begin() + i + 10));
 
-    range_normalize(state);
+    standardize(state);
 
     std::vector<double>().swap(price);
 

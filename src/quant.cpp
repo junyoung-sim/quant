@@ -29,6 +29,9 @@ void Quant::sync() {
                 double weight = agent.layer(l)->node(n)->weight(i);
                 target.layer(l)->node(n)->set_weight(i, weight);
             }
+
+            double bias = agent.layer(l)->node(n)->bias();
+            target.layer(l)->node(n)->set_bias(bias);
         }
     }
 }
