@@ -9,11 +9,8 @@
 
 int main(int argc, char *argv[])
 {
-    std::vector<std::string> tickers = {"AAPL", "AMGN", "AMZN", "AXP", "BA", "BRK-B", "CAT",
-                                        "CRM", "CSCO", "CVX", "DIA", "DIS", "GOOG", "GS", "HD",
-                                        "HON", "IBM", "INTC", "JNJ", "JPM", "KO", "MA", "MCD",
-                                        "MMM", "MRK", "MSFT", "NKE", "NVDA", "PFE", "PG", "TRV",
-                                        "UNH", "V", "VZ", "WBA", "WMT", "XOM"};
+    std::vector<std::string> tickers = {"AUD=X", "EUR=X", "GBP=X", "JPY=X", "KRW=X"};
+
     double eps_init = 0.50;
     double eps_min = 0.01;
     double alpha_init = 0.0001;
@@ -32,7 +29,7 @@ int main(int argc, char *argv[])
 
         std::shuffle(tickers.begin(), tickers.end(), seed);
         for(std::string ticker: tickers) {
-            std::vector<double> series = read_csv("./data/" + ticker + ".csv", "Adj Close");
+            std::vector<double> series = read_csv("./data/fx/" + ticker + ".csv", "Adj Close");
 
             quant.optimize(series, eps_init, eps_min, alpha_init, alpha_min, gamma, memory_capacity, batch_size, sync_interval, "./models/checkpoint", seed);
 

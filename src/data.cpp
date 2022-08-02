@@ -37,7 +37,8 @@ std::vector<double> read_csv(std::string path, std::string column) {
                 }
             }
 
-            series.push_back(std::stod(val));
+            if(val != "null")
+                series.push_back(std::stod(val));
             val = "";
         }
 
@@ -82,7 +83,7 @@ std::vector<double> sample_state(std::vector<double> &series, unsigned int t) {
     for(unsigned int i = 0; i <= price.size() - 10; i += 10)
         state.push_back(*std::max_element(price.begin() + i, price.begin() + i + 10));
 
-    standardize(state);
+    range_normalize(state);
 
     std::vector<double>().swap(price);
 
