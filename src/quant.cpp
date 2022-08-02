@@ -63,7 +63,7 @@ void Quant::optimize(std::vector<double> &series, double eps_init, double eps_mi
     double loss_sum = 0.00, mean_loss = 0.00;
     double benchmark = 1.00, model = 1.00;
 
-    unsigned int start = 99;
+    unsigned int start = 49;
     for(unsigned int t = start; t <= series.size() - 2; t++) {
         std::vector<double> state = sample_state(series, t);
         unsigned int action = eps_greedy_policy(state, eps);

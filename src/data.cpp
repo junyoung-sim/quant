@@ -5,6 +5,8 @@
 #include <fstream>
 #include <cmath>
 
+#include <iostream>
+
 #include "../lib/data.hpp"
 
 std::vector<double> read_csv(std::string path, std::string column) {
@@ -37,8 +39,7 @@ std::vector<double> read_csv(std::string path, std::string column) {
                 }
             }
 
-            if(val != "null")
-                series.push_back(std::stod(val));
+            series.push_back(std::stod(val));
             val = "";
         }
 
@@ -77,15 +78,8 @@ void standardize(std::vector<double> &series) {
 // --- //
 
 std::vector<double> sample_state(std::vector<double> &series, unsigned int t) {
-    std::vector<double> price = {series.begin() + t - 99, series.begin() + t + 1};
+    std::vector<double> price = {series.begin() + t - 49, series.begin() + t + 1};
+    range_normalize(price);
 
-    std::vector<double> state;
-    for(unsigned int i = 0; i <= price.size() - 10; i += 10)
-        state.push_back(*std::max_element(price.begin() + i, price.begin() + i + 10));
-
-    range_normalize(state);
-
-    std::vector<double>().swap(price);
-
-    return state;
+    return price;
 }
