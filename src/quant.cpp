@@ -54,7 +54,7 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
 
 void Quant::optimize(std::vector<double> &series, double eps_init, double eps_min, double alpha_init, double alpha_min, double gamma,
                      unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval, std::string checkpoint, std::default_random_engine &seed) {
-    double eps = 1.00;
+    double eps = eps_init;
     double alpha = alpha_init;
 
     std::vector<Memory> memory;
@@ -63,7 +63,7 @@ void Quant::optimize(std::vector<double> &series, double eps_init, double eps_mi
     double loss_sum = 0.00, mean_loss = 0.00;
     double benchmark = 1.00, model = 1.00;
 
-    unsigned int start = 49;
+    unsigned int start = 99;
     for(unsigned int t = start; t <= series.size() - 2; t++) {
         std::vector<double> state = sample_state(series, t);
         unsigned int action = eps_greedy_policy(state, eps);

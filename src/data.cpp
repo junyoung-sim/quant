@@ -78,8 +78,13 @@ void standardize(std::vector<double> &series) {
 // --- //
 
 std::vector<double> sample_state(std::vector<double> &series, unsigned int t) {
-    std::vector<double> price = {series.begin() + t - 49, series.begin() + t + 1};
-    range_normalize(price);
+    std::vector<double> price = {series.begin() + t - 99, series.begin() + t + 1};
 
-    return price;
+    std::vector<double> state;
+    for(unsigned int t = 10; t <= price.size(); t += 10)
+        state.push_back(price[t-1]);
+
+    range_normalize(state);
+
+    return state;
 }

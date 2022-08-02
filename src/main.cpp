@@ -9,12 +9,12 @@
 
 int main(int argc, char *argv[])
 {
-    double eps_init = 0.50;
+    double eps_init = 1.00;
     double eps_min = 0.01;
     double alpha_init = 0.0001;
     double alpha_min = 0.00001;
     double gamma = 0.50;
-    unsigned int memory_capacity = 1000;
+    unsigned int memory_capacity = 10000;
     unsigned int batch_size = 64;
     unsigned int sync_interval = 100;
 
