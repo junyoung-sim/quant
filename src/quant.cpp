@@ -54,16 +54,16 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
 
 void Quant::optimize(std::vector<double> &series, double eps_init, double eps_min, double alpha_init, double alpha_min, double gamma,
                      unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval, std::string checkpoint, std::default_random_engine &seed) {
-    double eps = eps_init;
+    double eps = 1.00;
     double alpha = alpha_init;
 
     std::vector<Memory> memory;
 
     unsigned int training_count = 0;
     double loss_sum = 0.00, mean_loss = 0.00;
-    double benchmark = 1.00, model = 1.00;
+    double model = 1.00;
 
-    unsigned int start = 99;
+    unsigned int start = 9;
     for(unsigned int t = start; t <= series.size() - 2; t++) {
         std::vector<double> state = sample_state(series, t);
         unsigned int action = eps_greedy_policy(state, eps);
@@ -89,12 +89,10 @@ void Quant::optimize(std::vector<double> &series, double eps_init, double eps_mi
             std::vector<double> agent_q = agent.predict(state);
             loss_sum += pow(expected_reward - agent_q[action], 2);
             mean_loss = loss_sum / training_count;
-
-            benchmark *= 1.00 + diff;
             model *= 1.00 + observed_reward;
 
             std::ofstream log("./res/log", std::ios::app);
-            log << mean_loss << " " << benchmark << " " << model << " " << eps << " " << alpha << "\n";
+            log << mean_loss << " " << model << "\n";
             log.close();
 
             std::vector<double>().swap(agent_q);
@@ -104,7 +102,7 @@ void Quant::optimize(std::vector<double> &series, double eps_init, double eps_mi
         std::vector<double>().swap(state);
 
         std::cout << "@frame" << t << ": action = " << action << " -> observed = " << observed_reward << ", "
-                  << "expected = " << expected_reward << ", benchmark = " << benchmark << ", model = " << model << "\n";
+                  << "expected = " << expected_reward << ", model return = " << model << "\n";
 
         if(memory.size() == memory_capacity) {
             std::vector<unsigned int> index(memory_capacity, 0);

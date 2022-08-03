@@ -39,7 +39,7 @@ private:
 public:
     Quant() {}
     Quant(std::default_random_engine &seed) {
-        init({{10,8},{8,6},{6,2}}, seed);
+        init({{10,8},{8,6},{6,4},{4,2}}, seed);
     }
     ~Quant() {}
 
