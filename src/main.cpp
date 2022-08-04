@@ -7,19 +7,19 @@
 
 int main(int argc, char *argv[])
 {
-    std::vector<std::string> tickers = {"SPY", "TLT", "GSG", "^VIX"};
+    std::vector<std::string> tickers = {"SPY", "TLT", "GSG",};
     Market market(tickers);
 
     Quant quant(market);
 
     double eps_init = 1.00;
     double eps_min = 0.01;
-    double alpha_init = 0.0001;
+    double alpha_init = 0.001;
     double alpha_min = 0.00001;
-    double gamma = 0.70;
+    double gamma = 0.50;
     unsigned int memory_capacity = 100;
     unsigned int batch_size = 32;
-    unsigned int sync_interval = 10;
+    unsigned int sync_interval = 100;
 
     quant.optimize(eps_init, eps_min, alpha_init, alpha_min, gamma, memory_capacity, batch_size, sync_interval);
 

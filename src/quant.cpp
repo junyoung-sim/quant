@@ -9,13 +9,6 @@
 #include "../lib/quant.hpp"
 
 void Quant::init(std::vector<std::vector<unsigned int>> shape) {
-    srand(time(NULL));
-    double kernel_max = 1.0, kernel_min = -1.0;
-    for(unsigned int i = 0; i < market->num_of_assets(); i++) {
-        double kernel_val = kernel_min + (double)rand() * (kernel_max - kernel_min) / RAND_MAX;
-        kernel.push_back(kernel_val);
-    }
-
     for(unsigned int l = 0; l < shape.size(); l++) {
         unsigned int in = shape[l][0], out = shape[l][1];
         agent.add_layer(in, out);
@@ -42,30 +35,18 @@ void Quant::sync() {
 }
 
 std::vector<double> Quant::sample_state(unsigned int t) {
-    std::vector<std::vector<double>> state2d;
+    std::vector<double> state;
     for(unsigned int i = 0; i < market->num_of_assets(); i++) {
         std::vector<double> *asset = market->asset(i);
-        std::vector<double> asset_t = {asset->begin(), asset->begin() + t + 1};
+        std::vector<double> asset_t = {asset->begin() + t - look_back + 1, asset->begin() + t + 1};
+        standardize(asset_t);
 
-        std::vector<double> ema = exponential_moving_average(asset_t, moving_average_period);
-        ema.erase(ema.begin(), ema.end() - look_back);
-        standardize(ema);
-
-        state2d.push_back(ema);
+        state.insert(state.end(), asset_t.begin(), asset_t.end());
 
         std::vector<double>().swap(asset_t);
-        std::vector<double>().swap(ema);
     }
 
-    std::vector<double> state1d;
-    for(unsigned int j = 0; j < state2d[0].size(); j++) {
-        double dot = 0.00;
-        for(unsigned int i = 0; i < state2d.size(); i++)
-            dot += state2d[i][j] * kernel[i];
-        state1d.push_back(relu(dot));
-    }
-
-    return state1d;
+    return state;
 }
 
 unsigned int Quant::policy(std::vector<double> &state) {
@@ -97,7 +78,7 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
     double loss_sum = 0.00, mean_loss = 0.00;
     double benchmark = 1.00, model = 1.00;
 
-    unsigned int start = (moving_average_period - 1) + (look_back - 1);
+    unsigned int start = look_back - 1;
     unsigned int terminal = main_asset->size() - 2;
     unsigned int training_count = 0;
 
@@ -194,7 +175,7 @@ void Quant::sgd(Memory &memory, double alpha) {
                     agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
                 }
 
-                double l2_lambda = 0.01;
+                double l2_lambda = 0.05;
                 gradient += 2.00 * l2_lambda * agent.layer(l)->node(n)->weight(i);
 
                 double updated_weight = agent.layer(l)->node(n)->weight(i) - alpha * gradient;

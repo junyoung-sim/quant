@@ -10,7 +10,6 @@
 
 #define LONG 0
 #define SHORT 1
-#define IDLE 2
 
 #define MAIN_ASSET 0
 
@@ -22,18 +21,14 @@ private:
     NeuralNetwork target;
     std::default_random_engine seed;
 
-    std::vector<double> kernel;
-
-    unsigned int moving_average_period;
     unsigned int look_back;
 
 public:
     Quant(Market &_market) {
         market = &_market;
-        moving_average_period = 10;
-        look_back = 25;
 
-        init({{25,25},{25,20},{20,15},{15,3}});
+        look_back = 50;
+        init({{150,150},{150,100},{100,100},{100,50},{50,50},{50,25},{25,2}});
     }
     ~Quant() {}
 
