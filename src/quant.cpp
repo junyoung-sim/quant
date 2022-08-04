@@ -1,12 +1,18 @@
 
 #include <cstdlib>
 #include <vector>
+#include <chrono>
+#include <iostream>
 
 #include "../lib/quant.hpp"
 
 void Quant::init(std::vector<std::vector<unsigned int>> shape) {
-    for(unsigned int i = 0; i < market->num_of_assets(); i++)
-        kernel.push_back((double)rand() / RAND_MAX);
+    srand(time(NULL));
+    double kernel_max = 1.0, kernel_min = -1.0;
+    for(unsigned int i = 0; i < market->num_of_assets(); i++) {
+        double kernel_val = kernel_min + (double)rand() * (kernel_max - kernel_min) / RAND_MAX;
+        kernel.push_back(kernel_val);
+    }
 
     for(unsigned int l = 0; l < shape.size(); l++) {
         unsigned int in = shape[l][0], out = shape[l][1];
@@ -14,6 +20,7 @@ void Quant::init(std::vector<std::vector<unsigned int>> shape) {
         target.add_layer(in, out);
     }
 
+    seed.seed(std::chrono::system_clock::now().time_since_epoch().count());
     agent.init(seed);
     sync();
 }
@@ -35,14 +42,16 @@ void Quant::sync() {
 std::vector<double> Quant::sample_state(unsigned int t) {
     std::vector<std::vector<double>> state2d;
     for(unsigned int i = 0; i < market->num_of_assets(); i++) {
-        std::vector<double> asset = {*market->asset(i)->begin(), *market->asset(i)->begin() + t + 1};
-        std::vector<double> ema = exponential_moving_average(asset, moving_average_period);
+        std::vector<double> *asset = market->asset(i);
+        std::vector<double> asset_t = {asset->begin(), asset->begin() + t + 1};
+
+        std::vector<double> ema = exponential_moving_average(asset_t, moving_average_period);
         ema.erase(ema.begin(), ema.end() - look_back);
         standardize(ema);
 
         state2d.push_back(ema);
 
-        std::vector<double>().swap(asset);
+        std::vector<double>().swap(asset_t);
         std::vector<double>().swap(ema);
     }
 

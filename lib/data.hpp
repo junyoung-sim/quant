@@ -33,7 +33,7 @@ public:
         std::system(cmd.c_str());
 
         for(std::string &ticker: tickers) {
-            std::vector<double> asset = read_csv("./data/preprocessed.csv", ticker);
+            std::vector<double> asset = read_csv("./data/cleaned.csv", ticker);
             assets.push_back(asset);
 
             std::vector<double>().swap(asset);
