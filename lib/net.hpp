@@ -59,10 +59,10 @@ public:
         std::vector<Node>().swap(n);
     }
 
-    Node *node(unsigned int index);
-
     unsigned int in_features();
     unsigned int out_features();
+
+    Node *node(unsigned int index);
 };
 
 // --- //

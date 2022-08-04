@@ -14,7 +14,6 @@ std::vector<double> read_csv(std::string path, std::string column) {
     if(source.is_open()) {
         std::string header;
         std::getline(source, header);
-
         unsigned int delimiter_count = 0;
         for(unsigned int i = 0; i < static_cast<unsigned int>(header.find(column)); i++) {
             if(header[i] == ',')
@@ -49,14 +48,6 @@ std::vector<double> read_csv(std::string path, std::string column) {
 
 // --- //
 
-void range_normalize(std::vector<double> &series) {
-    double max = *std::max_element(series.begin(), series.end());
-    double min = *std::min_element(series.begin(), series.end());
-
-    for(double &val: series)
-        val = (val - min) / (max - min);
-}
-
 void standardize(std::vector<double> &series) {
     double mean = 0.00;
     for(double &val: series)
@@ -73,11 +64,37 @@ void standardize(std::vector<double> &series) {
         val = (val - mean) / std_dev;
 }
 
+std::vector<double> exponential_moving_average(std::vector<double> &series, unsigned int period) {
+    std::vector<double> weights;
+    double weight_sum = 0.00;
+    double smoothing = 2.00 / (period + 1);
+    for(unsigned int i = 0; i < period; i++) {
+        double weight = pow(1.00 - smoothing, period - 1 - i);
+        weights.push_back(weight);
+        weight_sum += weight;
+    }
+
+    std::vector<double> ema;
+    for(unsigned int t = 0; t <= series.size() - period; t++) {
+        double exp_sum = 0.00;
+        for(unsigned int i = t; i < t + period; i++)
+            exp_sum += series[i] * weights[i-t];
+        ema.push_back(exp_sum / weight_sum);
+    }
+
+    return ema;
+}
+
 // --- //
 
-std::vector<double> sample_state(std::vector<double> &series, unsigned int t) {
-    std::vector<double> price = {series.begin() + t - 9, series.begin() + t + 1};
-    range_normalize(price);
+unsigned int Market::num_of_assets() {
+    return assets.size();
+}
 
-    return price;
+std::string Market::ticker(unsigned int i) {
+    return tickers[i];
+}
+
+std::vector<double> *Market::asset(unsigned int i) {
+    return &assets[i];
 }

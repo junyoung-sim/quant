@@ -64,16 +64,16 @@ void Node::set_weight(unsigned int index, double val) {
 
 // --- //
 
-Node *Layer::node(unsigned int index) {
-    return &n[index];
-}
-
 unsigned int Layer::in_features() {
     return in;
 }
 
 unsigned int Layer::out_features() {
     return out;
+}
+
+Node *Layer::node(unsigned int index) {
+    return &n[index];
 }
 
 // --- //
