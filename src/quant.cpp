@@ -91,12 +91,8 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
 
 void Quant::optimize(double eps_init, double eps_min, double alpha_init, double alpha_min, 
                      double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval) {
-    double eps = eps_init;
-    double alpha = alpha_min;
-
-    std::vector<Memory> memory;
-
     std::vector<double> *main_asset = market->asset(MAIN_ASSET);
+    std::vector<Memory> memory;
 
     double loss_sum = 0.00, mean_loss = 0.00;
     double benchmark = 1.00, model = 1.00;
@@ -106,6 +102,11 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
     unsigned int training_count = 0;
 
     for(unsigned int t = start; t <= terminal; t++) {
+        double eps = (eps_min - eps_init) / (terminal - start + 1) * t + eps_init;
+        double alpha = (alpha_min - alpha_init) / (terminal - start + 1) * t + alpha_init;
+
+        if(t % sync_interval == 0) sync();
+
         std::vector<double> state = sample_state(t);
         unsigned int action = eps_greedy_policy(state, eps);
 
@@ -148,7 +149,59 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
 
         std::cout << "@frame" << t << ": action = " << action << " -> observed = " << observed_reward << ", expected = " << expected_reward << " ";
         std::cout << "(benchmark = " << benchmark << ", model = " << model << ")\n";
+
+        if(memory.size() == memory_capacity) {
+            std::vector<unsigned int> index(memory_capacity, 0);
+            std::iota(index.begin(), index.end(), 0);
+            std::shuffle(index.begin(), index.end(), seed);
+            index.erase(index.begin() + batch_size, index.end());
+
+            for(unsigned int k: index)
+                sgd(memory[k], alpha);
+
+            memory.erase(memory.begin(), memory.begin() + 1);
+            training_count++;
+
+            std::vector<unsigned int>().swap(index);
+        }
     }
 
     std::vector<Memory>().swap(memory);
+}
+
+void Quant::sgd(Memory &memory, double alpha) {
+    std::vector<double> agent_q = agent.predict(*memory.state());
+    for(int l = agent.num_of_layers() - 1; l >= 0; l--) {
+        double partial_gradient = 0.00, gradient = 0.00;
+        for(unsigned int n = 0; n < agent.layer(l)->out_features(); n++) {
+            if(l == agent.num_of_layers() - 1) {
+                if(n == memory.action())
+                    partial_gradient = -2.00 * (memory.expected_reward() - agent_q[n]);
+                else
+                    partial_gradient = -2.00 * (agent_q[n] - agent_q[n]);
+            }
+            else
+                partial_gradient = agent.layer(l)->node(n)->err() * relu_prime(agent.layer(l)->node(n)->sum());
+
+            double updated_bias = agent.layer(l)->node(n)->bias() - alpha * partial_gradient;
+            agent.layer(l)->node(n)->set_bias(updated_bias);
+
+            for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
+                if(l == 0)
+                    gradient = partial_gradient * (*memory.state())[i];
+                else {
+                    gradient = partial_gradient * agent.layer(l-1)->node(i)->act();
+                    agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
+                }
+
+                double l2_lambda = 0.01;
+                gradient += 2.00 * l2_lambda * agent.layer(l)->node(n)->weight(i);
+
+                double updated_weight = agent.layer(l)->node(n)->weight(i) - alpha * gradient;
+                agent.layer(l)->node(n)->set_weight(i, updated_weight);
+            }
+        }
+    }
+
+    std::vector<double>().swap(agent_q);
 }
