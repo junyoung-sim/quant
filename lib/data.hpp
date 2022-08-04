@@ -50,4 +50,28 @@ public:
     std::vector<double> *asset(unsigned int i);
 };
 
+// --- //
+
+class Memory
+{
+private:
+    std::vector<double> s;
+    unsigned int a;
+    double r;
+public:
+    Memory() {}
+    Memory(std::vector<double> &state, unsigned int action, double expected_reward) {
+        s.swap(state);
+        a = action;
+        r = expected_reward;
+    }
+    ~Memory() {
+        std::vector<double>().swap(s);
+    }
+
+    std::vector<double> *state() { return &s; }
+    unsigned int action() { return a; }
+    double expected_reward() { return r; }
+};
+
 #endif

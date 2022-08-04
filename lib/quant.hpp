@@ -41,10 +41,12 @@ public:
     void sync();
 
     std::vector<double> sample_state(unsigned int t);
-    //unsigned int eps_greedy_policy(std::vector<double> &state, double eps);
 
-    //void optimize(double eps_init, double eps_min, double alpha_init, double alpha_min, 
-    //                double gamma,unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval);
+    unsigned int policy(std::vector<double> &state);
+    unsigned int eps_greedy_policy(std::vector<double> &state, double eps);
+
+    void optimize(double eps_init, double eps_min, double alpha_init, double alpha_min, 
+                  double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval);
 };
 
 #endif
