@@ -35,19 +35,22 @@ void Quant::sync() {
 std::vector<double> Quant::sample_state(unsigned int t) {
     std::vector<std::vector<double>> state2d;
     for(unsigned int i = 0; i < market->num_of_assets(); i++) {
-        std::vector<double> ema = exponential_moving_average(*market->asset(i), moving_average_period);
+        std::vector<double> asset = {*market->asset(i)->begin(), *market->asset(i)->begin() + t + 1};
+        std::vector<double> ema = exponential_moving_average(asset, moving_average_period);
         ema.erase(ema.begin(), ema.end() - look_back);
         standardize(ema);
 
         state2d.push_back(ema);
+
+        std::vector<double>().swap(asset);
         std::vector<double>().swap(ema);
     }
 
     std::vector<double> state1d;
-    for(unsigned int t = 0; t < state2d[0].size(); t++) {
+    for(unsigned int j = 0; j < state2d[0].size(); j++) {
         double dot = 0.00;
         for(unsigned int i = 0; i < state2d.size(); i++)
-            dot += state2d[i][t] * kernel[i];
+            dot += state2d[i][j] * kernel[i];
         state1d.push_back(relu(dot));
     }
 
