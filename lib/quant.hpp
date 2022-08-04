@@ -9,7 +9,7 @@
 #include "net.hpp"
 
 #define LONG 0
-#define SHORT 1
+#define IDLE 1
 
 #define MAIN_ASSET 0
 

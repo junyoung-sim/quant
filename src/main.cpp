@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-    std::vector<std::string> tickers = {"SPY", "TLT", "GSG",};
+    std::vector<std::string> tickers = {"SPY", "TLT", "GSG"};
     Market market(tickers);
 
     Quant quant(market);

@@ -95,8 +95,6 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
         double observed_reward;
         if(action == LONG)
             observed_reward = diff;
-        else if(action == SHORT)
-            observed_reward = -diff;
         else
             observed_reward = 0.00;
 
