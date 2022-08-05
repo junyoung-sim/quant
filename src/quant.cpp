@@ -173,7 +173,7 @@ void Quant::sgd(Memory &memory, double alpha) {
                     agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
                 }
 
-                double l2_lambda = 0.05;
+                double l2_lambda = 0.5;
                 gradient += 2.00 * l2_lambda * agent.layer(l)->node(n)->weight(i);
 
                 double updated_weight = agent.layer(l)->node(n)->weight(i) - alpha * gradient;
