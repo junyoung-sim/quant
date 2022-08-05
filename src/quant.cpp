@@ -34,10 +34,10 @@ void Quant::sync() {
     }
 }
 
-std::vector<double> Quant::sample_state(unsigned int t) {
+std::vector<double> Quant::sample_state(Market &market, unsigned int t) {
     std::vector<double> state;
-    for(unsigned int i = 0; i < market->num_of_assets(); i++) {
-        std::vector<double> *asset = market->asset(i);
+    for(unsigned int i = 0; i < market.num_of_assets(); i++) {
+        std::vector<double> *asset = market.asset(i);
         std::vector<double> asset_t = {asset->begin() + t - look_back + 1, asset->begin() + t + 1};
         standardize(asset_t);
 
@@ -70,9 +70,9 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
     return action;
 }
 
-void Quant::optimize(double eps_init, double eps_min, double alpha_init, double alpha_min, 
+void Quant::optimize(Market &market, double eps_init, double eps_min, double alpha_init, double alpha_min, 
                      double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval) {
-    std::vector<double> *main_asset = market->asset(MAIN_ASSET);
+    std::vector<double> *main_asset = market.asset(MAIN_ASSET);
     std::vector<Memory> memory;
 
     double loss_sum = 0.00, mean_loss = 0.00;
@@ -88,7 +88,7 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
 
         if(t % sync_interval == 0) sync();
 
-        std::vector<double> state = sample_state(t);
+        std::vector<double> state = sample_state(market, t);
         unsigned int action = eps_greedy_policy(state, eps);
 
         double diff = (main_asset->at(t+1) - main_asset->at(t)) / main_asset->at(t);
@@ -100,7 +100,7 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
 
         double expected_reward = observed_reward;
         if(t != terminal) {
-            std::vector<double> next_state = sample_state(t+1);
+            std::vector<double> next_state = sample_state(market, t+1);
             std::vector<double> target_q = target.predict(next_state);
             expected_reward += gamma * *std::max_element(target_q.begin(), target_q.end());
 
@@ -173,7 +173,7 @@ void Quant::sgd(Memory &memory, double alpha) {
                     agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
                 }
 
-                double l2_lambda = 0.5;
+                double l2_lambda = 0.05;
                 gradient += 2.00 * l2_lambda * agent.layer(l)->node(n)->weight(i);
 
                 double updated_weight = agent.layer(l)->node(n)->weight(i) - alpha * gradient;
