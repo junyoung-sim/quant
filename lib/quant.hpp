@@ -21,16 +21,21 @@ private:
     NeuralNetwork agent;
     NeuralNetwork target;
     std::default_random_engine seed;
-
     unsigned int look_back;
 
+    std::string checkpoint;
+
 public:
-    Quant(Market &_market) {
+    Quant(Market &_market, std::string _checkpoint): checkpoint(_checkpoint) {
         market = &_market;
         look_back = 20;
         init({{100,100},{100,100},{100,100},{100,50},{50,2}});
+
+        load(checkpoint);
     }
-    ~Quant() {}
+    ~Quant() {
+        save(checkpoint);
+    }
 
     void init(std::vector<std::vector<unsigned int>> shape);
     void sync();

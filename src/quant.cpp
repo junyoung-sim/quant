@@ -146,6 +146,7 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
     }
 
     std::vector<Memory>().swap(memory);
+    std::system("./python/graph.py");
 }
 
 void Quant::sgd(Memory &memory, double alpha) {
