@@ -3,8 +3,6 @@
 #include <vector>
 #include <string>
 
-#include <iostream>
-
 #include "../lib/quant.hpp"
 
 int main(int argc, char *argv[])
