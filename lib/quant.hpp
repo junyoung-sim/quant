@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <vector>
 #include <random>
+#include <string>
 
 #include "data.hpp"
 #include "net.hpp"
@@ -42,6 +43,9 @@ public:
     void optimize(double eps_init, double eps_min, double alpha_init, double alpha_min,
                   double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval);
     void sgd(Memory &memory, double alpha);
+
+    void save(std::string path);
+    void load(std::string path);
 };
 
 #endif
