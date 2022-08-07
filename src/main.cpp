@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
     double alpha_min = 0.0001;
     double gamma = 0.50;
     unsigned int memory_capacity = 100;
-    unsigned int batch_size = 32;
-    unsigned int sync_interval = 100;
+    unsigned int batch_size = 50;
+    unsigned int sync_interval = 10;
 
     Quant quant(market, checkpoint);
     quant.optimize(eps_init, eps_min, alpha_init, alpha_min, gamma, memory_capacity, batch_size, sync_interval);

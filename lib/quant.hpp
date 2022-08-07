@@ -28,8 +28,8 @@ private:
 public:
     Quant(Market &_market, std::string _checkpoint): checkpoint(_checkpoint) {
         market = &_market;
-        look_back = 20;
-        init({{100,100},{100,100},{100,100},{100,50},{50,2}});
+        look_back = 100;
+        init({{600,600},{600,400},{400,200},{200,100},{100,2}});
 
         load(checkpoint);
     }
