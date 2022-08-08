@@ -39,6 +39,7 @@ std::vector<double> Quant::sample_state(unsigned int t) {
     for(unsigned int i = 0; i < market->num_of_assets(); i++) {
         std::vector<double> *asset = market->asset(i);
         std::vector<double> asset_t = {asset->begin() + t - look_back + 1, asset->begin() + t + 1};
+
         standardize(asset_t);
 
         state.insert(state.end(), asset_t.begin(), asset_t.end());
@@ -79,22 +80,26 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
     double benchmark = 1.00, model = 1.00;
 
     unsigned int start = look_back - 1;
-    unsigned int terminal = main_asset->size() - 2;
+    unsigned int terminal = main_asset->size() - 1 - decision_interval;
+
+    unsigned int frame_count = 0;
     unsigned int training_count = 0;
 
-    for(unsigned int t = start; t <= terminal; t++) {
+    for(unsigned int t = start; t <= terminal; t += decision_interval) {
         double eps = (eps_min - eps_init) / (terminal - start + 1) * t + eps_init;
         double alpha = (alpha_min - alpha_init) / (terminal - start + 1) * t + alpha_init;
 
-        if(t % sync_interval == 0) sync();
+        if(frame_count % sync_interval == 0) sync();
 
         std::vector<double> state = sample_state(t);
         unsigned int action = eps_greedy_policy(state, eps);
 
-        double diff = (main_asset->at(t+1) - main_asset->at(t)) / main_asset->at(t);
+        double diff = (main_asset->at(t+decision_interval) - main_asset->at(t)) / main_asset->at(t);
         double observed_reward;
         if(action == LONG)
             observed_reward = diff;
+        else if(action == SHORT)
+            observed_reward = -diff;
         else
             observed_reward = 0.00;
 
@@ -143,6 +148,8 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
 
             std::vector<unsigned int>().swap(index);
         }
+
+        frame_count++;
     }
 
     std::vector<Memory>().swap(memory);

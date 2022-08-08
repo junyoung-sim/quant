@@ -10,7 +10,8 @@
 #include "net.hpp"
 
 #define LONG 0
-#define IDLE 1
+#define SHORT 1
+#define IDLE 2
 
 #define MAIN_ASSET 0
 
@@ -21,7 +22,9 @@ private:
     NeuralNetwork agent;
     NeuralNetwork target;
     std::default_random_engine seed;
+
     unsigned int look_back;
+    unsigned int decision_interval;
 
     std::string checkpoint;
 
@@ -29,7 +32,8 @@ public:
     Quant(Market &_market, std::string _checkpoint): checkpoint(_checkpoint) {
         market = &_market;
         look_back = 50;
-        init({{300,300},{300,300},{300,150},{150,2}});
+        decision_interval = 10;
+        init({{250,250},{250,250},{250,250},{250,150},{150,3}});
 
         load(checkpoint);
     }
