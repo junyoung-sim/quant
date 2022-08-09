@@ -24,7 +24,6 @@ private:
     std::default_random_engine seed;
 
     unsigned int look_back;
-    unsigned int decision_interval;
 
     std::string checkpoint;
 
@@ -32,8 +31,7 @@ public:
     Quant(Market &_market, std::string _checkpoint): checkpoint(_checkpoint) {
         market = &_market;
         look_back = 50;
-        decision_interval = 10;
-        init({{250,250},{250,250},{250,250},{250,150},{150,3}});
+        init({{200,200},{200,200},{200,200},{200,200},{200,200},{200,100},{100,3}});
 
         load(checkpoint);
     }

@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     double eps_min = 0.01;
     double alpha_init = 0.001;
     double alpha_min = 0.0001;
-    double gamma = 0.50;
+    double gamma = 0.90;
     unsigned int memory_capacity = 100;
     unsigned int batch_size = 50;
     unsigned int sync_interval = 10;

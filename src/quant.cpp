@@ -80,21 +80,19 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
     double benchmark = 1.00, model = 1.00;
 
     unsigned int start = look_back - 1;
-    unsigned int terminal = main_asset->size() - 1 - decision_interval;
-
-    unsigned int frame_count = 0;
+    unsigned int terminal = main_asset->size() - 2;
     unsigned int training_count = 0;
 
-    for(unsigned int t = start; t <= terminal; t += decision_interval) {
+    for(unsigned int t = start; t <= terminal; t++) {
         double eps = (eps_min - eps_init) / (terminal - start + 1) * t + eps_init;
         double alpha = (alpha_min - alpha_init) / (terminal - start + 1) * t + alpha_init;
 
-        if(frame_count % sync_interval == 0) sync();
+        if(t % sync_interval == 0) sync();
 
         std::vector<double> state = sample_state(t);
         unsigned int action = eps_greedy_policy(state, eps);
 
-        double diff = (main_asset->at(t+decision_interval) - main_asset->at(t)) / main_asset->at(t);
+        double diff = (main_asset->at(t+1) - main_asset->at(t)) / main_asset->at(t);
         double observed_reward;
         if(action == LONG)
             observed_reward = diff;
@@ -148,8 +146,6 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
 
             std::vector<unsigned int>().swap(index);
         }
-
-        frame_count++;
     }
 
     std::vector<Memory>().swap(memory);
