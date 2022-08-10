@@ -61,12 +61,17 @@ unsigned int Quant::policy(std::vector<double> &state) {
 unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
     unsigned int action;
     double explore = (double)rand() / RAND_MAX;
+
     if(explore < eps)
         action = agent.layer(agent.num_of_layers() - 1)->out_features();
     else
         action = policy(state);
 
     return action;
+}
+
+void Quant::optimize(double eps_init, double eps_min, double alpha_init, double alpha_min,
+                     double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval) {
 }
 
 /*#include <cstdlib>
