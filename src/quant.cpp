@@ -1,5 +1,6 @@
 
-#include <cstdlib>
+
+/*#include <cstdlib>
 #include <vector>
 #include <chrono>
 #include <cmath>
@@ -129,7 +130,8 @@ void Quant::optimize(double eps_init, double eps_min, double alpha_init, double 
         memory.push_back(Memory(state, action, expected_reward));
         std::vector<double>().swap(state);
 
-        std::cout << "@frame" << t << ": action = " << action << " -> observed = " << observed_reward << ", expected = " << expected_reward << " ";
+        std::cout << "@frame" << t << " (eps=" << eps << ", alpha=" << alpha << ") ";
+        std::cout << "action = " << action << " -> observed = " << observed_reward << ", expected = " << expected_reward << " ";
         std::cout << "(benchmark = " << benchmark << ", model = " << model << ")\n";
 
         if(memory.size() == memory_capacity) {
@@ -187,4 +189,4 @@ void Quant::sgd(Memory &memory, double alpha) {
     }
 
     std::vector<double>().swap(agent_q);
-}
+}*/

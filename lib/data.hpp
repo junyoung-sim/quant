@@ -20,7 +20,7 @@ private:
     std::vector<std::vector<double>> assets;
 public:
     Market() {}
-    Market(std::vector<std::string> &_tickers) {
+    Market(std::vector<std::string> _tickers) {
         tickers.swap(_tickers);
         std::string cmd = "./python/clean.py ";
         for(unsigned int i = 0; i < tickers.size(); i++) {

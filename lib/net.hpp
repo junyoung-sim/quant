@@ -84,9 +84,6 @@ public:
     Layer *layer(unsigned int index);
 
     std::vector<double> predict(std::vector<double> &x);
-
-    void save(std::string path);
-    void load(std::string path);
 };
 
 #endif

@@ -20,19 +20,13 @@ int main(int argc, char *argv[])
 
     // --- //
 
-    Market market(tickers);
+    std::vector<Market> market_dataset;
+    for(std::string ticker: tickers)
+        market_dataset.push_back(Market({ticker, "TLT", "GOLD", "SLV", "^VIX"}));
 
-    double eps_init = 1.00;
-    double eps_min = 0.01;
-    double alpha_init = 0.001;
-    double alpha_min = 0.0001;
-    double gamma = 0.90;
-    unsigned int memory_capacity = 100;
-    unsigned int batch_size = 50;
-    unsigned int sync_interval = 10;
+    // --- //
 
-    Quant quant(market, checkpoint);
-    quant.optimize(eps_init, eps_min, alpha_init, alpha_min, gamma, memory_capacity, batch_size, sync_interval);
+    Quant quant(market_dataset, checkpoint);
 
     return 0;
 }
