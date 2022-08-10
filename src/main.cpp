@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
     for(std::string ticker: tickers)
         market_dataset.push_back(Market({ticker, "TLT", "GOLD", "SLV", "^VIX"}));
 
+    std::vector<std::string>().swap(tickers);
+
     // --- //
 
     Quant quant(market_dataset, checkpoint);

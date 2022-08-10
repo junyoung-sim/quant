@@ -1,4 +1,73 @@
 
+#include <cstdlib>
+#include <vector>
+#include <string>
+#include <chrono>
+#include <iostream>
+
+#include "../lib/quant.hpp"
+
+void Quant::init(std::vector<std::vector<unsigned int>> shape) {
+    for(unsigned int l = 0; l < shape.size(); l++) {
+        unsigned int in = shape[l][0], out = shape[l][1];
+        agent.add_layer(in, out);
+        target.add_layer(in, out);
+    }
+
+    seed.seed(std::chrono::system_clock::now().time_since_epoch().count());
+    agent.init(seed);
+    sync();
+}
+
+void Quant::sync() {
+    for(unsigned int l = 0; l < agent.num_of_layers(); l++) {
+        for(unsigned int n = 0; n < agent.layer(l)->out_features(); n++) {
+            for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
+                double weight = agent.layer(l)->node(n)->weight(i);
+                target.layer(l)->node(n)->set_weight(i, weight);
+            }
+
+            double bias = agent.layer(l)->node(n)->bias();
+            target.layer(l)->node(n)->set_bias(bias);
+        }
+    }
+}
+
+std::vector<double> Quant::sample_state(unsigned int market_id, unsigned int t) {
+    std::vector<double> state;
+    Market *market = &market_dataset->at(market_id);
+    for(unsigned int i = 0; i < market->num_of_assets(); i++) {
+        std::vector<double> *asset = market->asset(i);
+        std::vector<double> asset_t = {asset->begin() + t + 1 - look_back, asset->begin() + t + 1};
+        standardize(asset_t);
+
+        state.insert(state.end(), asset_t.begin(), asset_t.end());
+
+        std::vector<double>().swap(asset_t);
+    }
+
+    return state;
+}
+
+unsigned int Quant::policy(std::vector<double> &state) {
+    std::vector<double> agent_q = agent.predict(state);
+    unsigned int action = std::max_element(agent_q.begin(), agent_q.end()) - agent_q.begin();
+
+    std::vector<double>().swap(agent_q);
+
+    return action;
+}
+
+unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
+    unsigned int action;
+    double explore = (double)rand() / RAND_MAX;
+    if(explore < eps)
+        action = agent.layer(agent.num_of_layers() - 1)->out_features();
+    else
+        action = policy(state);
+
+    return action;
+}
 
 /*#include <cstdlib>
 #include <vector>

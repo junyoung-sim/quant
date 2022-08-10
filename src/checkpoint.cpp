@@ -1,33 +1,33 @@
 
-/*#include <cstdlib>
+#include <cstdlib>
 #include <fstream>
 #include <vector>
 #include <string>
 
 #include "../lib/quant.hpp"
 
-void Quant::save(std::string path) {
-    std::ofstream checkpoint(path);
-    if(checkpoint.is_open()) {
+void Quant::save() {
+    std::ofstream out(checkpoint);
+    if(out.is_open()) {
         for(unsigned int l = 0; l < agent.num_of_layers(); l++) {
             for(unsigned int n = 0; n < agent.layer(l)->out_features(); n++) {
                 for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++)
-                    checkpoint << agent.layer(l)->node(n)->weight(i) << " ";
-                checkpoint << agent.layer(l)->node(n)->bias() << "\n";
+                    out << agent.layer(l)->node(n)->weight(i) << " ";
+                out << agent.layer(l)->node(n)->bias() << "\n";
             }
         }
 
-        checkpoint.close();
+        out.close();
     }
 }
 
-void Quant::load(std::string path) {
-    std::ifstream checkpoint(path);
-    if(checkpoint.is_open()) {
+void Quant::load() {
+    std::ifstream out(checkpoint);
+    if(out.is_open()) {
         for(unsigned int l = 0; l < agent.num_of_layers(); l++) {
             for(unsigned int n = 0; n < agent.layer(l)->out_features(); n++) {
                 std::string line;
-                std::getline(checkpoint, line);
+                std::getline(out, line);
 
                 for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
                     double weight = std::stod(line.substr(0, static_cast<unsigned int>(line.find(" "))));
@@ -42,6 +42,6 @@ void Quant::load(std::string path) {
         }
 
         sync();
-        checkpoint.close();
+        out.close();
     }
- }*/
+ }
