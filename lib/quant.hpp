@@ -9,6 +9,8 @@
 #include "../lib/data.hpp"
 #include "../lib/net.hpp"
 
+#define MAIN_ASSET 0
+
 class Quant
 {
 private:
@@ -17,6 +19,8 @@ private:
     std::default_random_engine seed;
 
     std::vector<Market> *market_dataset;
+    unsigned int num_of_frames;
+
     unsigned int look_back;
     std::vector<double> action_space;
 
@@ -31,6 +35,17 @@ public:
 
         init({{100,100},{100,100},{100,100},{100,100},{100,50},{50,3}});
         load();
+
+        // --- //
+
+        for(unsigned int m = 0; m < market_dataset->size(); m++) {
+            Market *market = &market_dataset->at(m);
+            for(unsigned int i = 0; i < market->num_of_assets(); i++) {
+                unsigned int start = look_back - 1;
+                unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
+                num_of_frames += terminal - start + 1;
+            }
+        }
     }
     ~Quant() {
         std::vector<Market>().swap(*market_dataset);
@@ -45,8 +60,8 @@ public:
     unsigned int policy(std::vector<double> &state);
     unsigned int eps_greedy_policy(std::vector<double> &state, double eps);
 
-    void optimize(double eps_init, double eps_min, double alpha_init, double alpha_min,
-                  double gamma, unsigned int memory_capacity, unsigned int batch_size, unsigned int sync_interval);
+    void optimize();
+    void sgd(Memory &memory, double alpha, double lambda);
 
     void save();
     void load();
