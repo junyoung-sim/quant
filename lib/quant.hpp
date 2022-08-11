@@ -6,6 +6,8 @@
 #include <string>
 #include <random>
 
+#include <iostream>
+
 #include "../lib/data.hpp"
 #include "../lib/net.hpp"
 
@@ -38,18 +40,22 @@ public:
 
         // --- //
 
+        num_of_frames = 0;
         for(unsigned int m = 0; m < market_dataset->size(); m++) {
             Market *market = &market_dataset->at(m);
-            for(unsigned int i = 0; i < market->num_of_assets(); i++) {
-                unsigned int start = look_back - 1;
-                unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
-                num_of_frames += terminal - start + 1;
-            }
+
+            unsigned int start = look_back - 1;
+            unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
+            num_of_frames += terminal - start + 1;
         }
+
+        std::cout << num_of_frames << "\n";
     }
     ~Quant() {
         std::vector<Market>().swap(*market_dataset);
         std::vector<double>().swap(action_space);
+
+        save();
     }
 
     void init(std::vector<std::vector<unsigned int>> shape);

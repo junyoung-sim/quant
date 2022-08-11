@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <fstream>
 #include <iostream>
 
 #include "../lib/quant.hpp"
@@ -86,7 +87,6 @@ void Quant::optimize() {
     unsigned int sync_interval = (unsigned int)(num_of_frames * 0.10);
 
     unsigned int frame_count = 0;
-    unsigned int training_count = 0;
 
     std::vector<Memory> memory;
 
@@ -95,6 +95,7 @@ void Quant::optimize() {
         unsigned int start = look_back - 1;
         unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
 
+        double loss_sum = 0.00, mean_loss = 0.00;
         double benchmark = 1.00, model = 1.00;
 
         for(unsigned int t = start; t <= terminal; t++) {
@@ -121,14 +122,48 @@ void Quant::optimize() {
                 std::vector<double>().swap(target_q);
             }
 
+            // --- //
+
+            benchmark *= 1.00 + diff;
+            model *= 1.00 + observed_reward;
+
+            std::vector<double> agent_q = agent.predict(state);
+            loss_sum += pow(expected_reward - agent_q[action], 2);
+            mean_loss = loss_sum / (t - start + 1);
+
+            std::ofstream log("./res/log", std::ios::app);
+            log << mean_loss << " " << benchmark << " " << model << " " << eps << " " << alpha << "\n";
+            log.close();
+
+            std::cout << "frame-" << frame_count << " @ " << market->ticker(MAIN_ASSET) << ": ";
+            std::cout << "(eps=" << eps << ", alpha=" << alpha << ") ";
+            std::cout << "action=" << action << " -> " << "observed=" << observed_reward << ", expected=" << expected_reward << ", ";
+            std::cout << "benchmark=" << benchmark << ", model=" << model << "\n";
+
             memory.push_back(Memory(state, action, expected_reward));
             std::vector<double>().swap(state);
 
             frame_count++;
 
             // --- //
+
+            if(memory.size() == memory_capacity) {
+                std::vector<unsigned int> index(memory_capacity, 0);
+                std::iota(index.begin(), index.end(), 0);
+                std::shuffle(index.begin(), index.end(), seed);
+                index.erase(index.begin() + batch_size, index.end());
+
+                for(unsigned int k: index)
+                    sgd(memory[k], alpha, lambda);
+
+                memory.erase(memory.begin(), memory.begin() + 1);
+
+                std::vector<unsigned int>().swap(index);
+            }
         }
     }
+
+    std::vector<Memory>().swap(memory);
 }
 
 void Quant::sgd(Memory &memory, double alpha, double lambda) {

@@ -1,5 +1,5 @@
 COM=g++
-VER=-std=c++11
+VER=-std=c++2a
 
 output: main.o data.o net.o quant.o checkpoint.o
 	$(COM) $(VER) main.o data.o net.o quant.o checkpoint.o -o exec
