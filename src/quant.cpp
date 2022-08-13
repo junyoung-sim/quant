@@ -83,7 +83,7 @@ void Quant::optimize() {
     double alpha_init = 0.0001;
     double alpha_min = 0.00001;
     double lambda = 0.05;
-    double gamma = 0.10;
+    double gamma = 0.50;
     unsigned int batch_size = 32;
     unsigned int memory_capacity = (unsigned int)(num_of_frames * 0.10);
     unsigned int sync_interval = 1000;
@@ -94,12 +94,13 @@ void Quant::optimize() {
     double alpha = alpha_init;
     unsigned int frame_count = 0;
 
+    double loss_sum = 0.00, mean_loss = 0.00;
+
     for(unsigned int m = 0; m < market_dataset->size(); m++) {
         Market *market = &market_dataset->at(m);
         unsigned int start = look_back - 1;
         unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
 
-        double loss_sum = 0.00, mean_loss = 0.00;
         double benchmark = 0.00, model = 0.00;
 
         for(unsigned int t = start; t <= terminal; t++) {
@@ -132,7 +133,7 @@ void Quant::optimize() {
 
             std::vector<double> agent_q = agent.predict(state);
             loss_sum += pow(expected_reward - agent_q[action], 2);
-            mean_loss = loss_sum / (t - start + 1);
+            mean_loss = loss_sum / frame_count;
 
             std::vector<double>().swap(agent_q);
 
@@ -169,8 +170,7 @@ void Quant::optimize() {
             }
         }
 
-        std::system(("./python/graph.py " + market->ticker(MAIN_ASSET)).c_str());
-        std::system("rm ./res/log && touch ./res/log");
+        std::system("./python/graph.py");
     }
 
     std::vector<Memory>().swap(memory);

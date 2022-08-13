@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 log = open("./res/log", "r").readlines()
 
-ticker = sys.argv[1]
 loss, benchmark, model, eps, alpha = [], [], [], [], []
 
 for line in log:
@@ -18,23 +17,20 @@ for line in log:
 
 t = [i for i in range(len(loss))]
 
-plt.figure(figsize=(15,8))
-
-plt.subplot(2, 2, 1)
-plt.plot(t, loss, color="blue")
+plt.figure(figsize=(20,5))
+plt.subplot(1, 3, 1)
+plt.plot(t, loss)
 plt.title("Mean Loss")
-
-plt.subplot(2, 2, 2)
-plt.plot(t, benchmark, color="green")
-plt.plot(t, model, color="orange")
-plt.title("Cumulative Return")
-
-plt.subplot(2, 2, 3)
-plt.plot(t, eps, color="blue")
+plt.subplot(1, 3, 2)
+plt.plot(t, eps)
 plt.title("Epsilon")
-
-plt.subplot(2, 2, 4)
-plt.plot(t, alpha, color="blue")
+plt.subplot(1, 3, 3)
+plt.plot(t, alpha)
 plt.title("Alpha")
+plt.savefig("./res/param.png")
 
-plt.savefig("./res/{}.png" .format(ticker))
+plt.figure(figsize=(30,8))
+plt.plot(benchmark, color="green")
+plt.plot(model, color="orange")
+plt.title("Cumulative Return")
+plt.savefig("./res/performance.png")
