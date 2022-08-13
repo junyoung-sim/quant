@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 def main():
     tickers = [sys.argv[i] for i in range(1, len(sys.argv))]

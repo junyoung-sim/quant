@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
+#include <iostream>
 
 #include "../lib/quant.hpp"
 
@@ -21,14 +22,17 @@ int main(int argc, char *argv[])
     // --- //
 
     std::vector<Market> market_dataset;
-    for(std::string ticker: tickers)
-        market_dataset.push_back(Market({ticker, "TLT", "GOLD", "SLV", "^VIX"}));
+    for(std::string ticker: tickers) {
+        std::cout << "Loading market data for " << ticker << "\n";
+        market_dataset.push_back(Market({ticker, "SPY", "TLT", "GOLD", "^VIX"}));
+    }
 
     std::vector<std::string>().swap(tickers);
 
     // --- //
 
     Quant quant(market_dataset, checkpoint);
+    quant.optimize();
 
     return 0;
 }

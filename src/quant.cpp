@@ -15,7 +15,9 @@ void Quant::init(std::vector<std::vector<unsigned int>> shape) {
         target.add_layer(in, out);
     }
 
+    srand(time(NULL));
     seed.seed(std::chrono::system_clock::now().time_since_epoch().count());
+
     agent.init(seed);
     sync();
 }
@@ -66,7 +68,7 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
     double explore = (double)rand() / RAND_MAX;
 
     if(explore < eps)
-        action = agent.layer(agent.num_of_layers() - 1)->out_features();
+        action = rand() % agent.layer(agent.num_of_layers() - 1)->out_features();
     else
         action = policy(state);
 
@@ -78,17 +80,19 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
 void Quant::optimize() {
     double eps_init = 1.00;
     double eps_min = 0.10;
-    double alpha_init = 0.0010;
+    double alpha_init = 0.0001;
     double alpha_min = 0.00001;
     double lambda = 0.05;
-    double gamma = 0.90;
+    double gamma = 0.10;
     unsigned int batch_size = 32;
     unsigned int memory_capacity = (unsigned int)(num_of_frames * 0.10);
-    unsigned int sync_interval = (unsigned int)(num_of_frames * 0.10);
-
-    unsigned int frame_count = 0;
+    unsigned int sync_interval = 1000;
 
     std::vector<Memory> memory;
+
+    double eps = eps_init;
+    double alpha = alpha_init;
+    unsigned int frame_count = 0;
 
     for(unsigned int m = 0; m < market_dataset->size(); m++) {
         Market *market = &market_dataset->at(m);
@@ -96,13 +100,12 @@ void Quant::optimize() {
         unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
 
         double loss_sum = 0.00, mean_loss = 0.00;
-        double benchmark = 1.00, model = 1.00;
+        double benchmark = 0.00, model = 0.00;
 
         for(unsigned int t = start; t <= terminal; t++) {
-            double eps = std::max((eps_min - eps_init) / (num_of_frames * 0.10) * frame_count + eps_init, eps_min);
-            double alpha = std::max((alpha_min - alpha_init) / (num_of_frames * 0.10) * frame_count + alpha_init, alpha_min);
+            eps = std::max((eps_min - eps_init) / (unsigned int)(num_of_frames * 0.10) * frame_count + eps_init, eps_min);
 
-            if(frame_count % sync_interval) sync();
+            if(frame_count % sync_interval == 0) sync();
 
             // --- //
 
@@ -124,12 +127,14 @@ void Quant::optimize() {
 
             // --- //
 
-            benchmark *= 1.00 + diff;
-            model *= 1.00 + observed_reward;
+            benchmark += diff;
+            model += observed_reward;
 
             std::vector<double> agent_q = agent.predict(state);
             loss_sum += pow(expected_reward - agent_q[action], 2);
             mean_loss = loss_sum / (t - start + 1);
+
+            std::vector<double>().swap(agent_q);
 
             std::ofstream log("./res/log", std::ios::app);
             log << mean_loss << " " << benchmark << " " << model << " " << eps << " " << alpha << "\n";
@@ -153,6 +158,8 @@ void Quant::optimize() {
                 std::shuffle(index.begin(), index.end(), seed);
                 index.erase(index.begin() + batch_size, index.end());
 
+                alpha = std::max((alpha_min - alpha_init) / (num_of_frames - memory_capacity) * (frame_count - memory_capacity) + alpha_init, alpha_min);
+
                 for(unsigned int k: index)
                     sgd(memory[k], alpha, lambda);
 
@@ -161,6 +168,9 @@ void Quant::optimize() {
                 std::vector<unsigned int>().swap(index);
             }
         }
+
+        std::system(("./python/graph.py " + market->ticker(MAIN_ASSET)).c_str());
+        std::system("rm ./res/log && touch ./res/log");
     }
 
     std::vector<Memory>().swap(memory);
