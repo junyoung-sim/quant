@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
-#include <iostream>
 
 #include "../lib/quant.hpp"
 
