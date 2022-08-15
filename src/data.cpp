@@ -64,6 +64,39 @@ void standardize(std::vector<double> &series) {
         val = (val - mean) / std_dev;
 }
 
+std::vector<double> exponential_moving_average(std::vector<double> &series, unsigned int period) {
+    std::vector<double> weight;
+    double weight_sum = 0.00;
+    double smoothing = 2.00 / (period + 1);
+    for(unsigned int t = 0; t < period; t++) {
+        double w = pow(1.00 - smoothing, period - 1 - t);
+        weight.push_back(w);
+        weight_sum += w;
+    }
+
+    std::vector<double> ema;
+    for(unsigned int t = 0; t <= series.size() - period; t++) {
+        double exp_sum = 0.00;
+        for(unsigned int i = t; i < t + period; i++)
+            exp_sum += series[i] * weight[i-t];
+        ema.push_back(exp_sum / weight_sum);
+    }
+
+    return ema;
+}
+
+std::vector<double> moving_average_convergence_divergence(std::vector<double> &series, unsigned int fast_period, unsigned int slow_period) {
+    std::vector<double> fast_ema = exponential_moving_average(series, fast_period);
+    std::vector<double> slow_ema = exponential_moving_average(series, slow_period);
+    fast_ema.erase(fast_ema.begin(), fast_ema.begin() + (fast_ema.size() - slow_ema.size()));
+
+    std::vector<double> macd;
+    for(unsigned int t = 0; t < fast_ema.size(); t++)
+        macd.push_back(fast_ema[t] - slow_ema[t]);
+
+    return macd;
+}
+
 // --- //
 
 unsigned int Market::num_of_assets() {

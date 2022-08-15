@@ -11,6 +11,9 @@ std::vector<double> read_csv(std::string path, std::string column);
 
 void standardize(std::vector<double> &series);
 
+std::vector<double> exponential_moving_average(std::vector<double> &series, unsigned int period);
+std::vector<double> moving_average_convergence_divergence(std::vector<double> &series, unsigned int fast_period, unsigned int slow_period);
+
 // --- //
 
 class Market
