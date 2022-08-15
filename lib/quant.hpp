@@ -23,8 +23,6 @@ private:
     std::vector<Market> *market_dataset;
     unsigned int num_of_frames;
 
-    unsigned int fast_period;
-    unsigned int slow_period;
     unsigned int look_back;
     std::vector<double> action_space;
 
@@ -34,9 +32,7 @@ public:
     Quant() {}
     Quant(std::vector<Market> &_market_dataset, std::string _checkpoint): checkpoint(_checkpoint) {
         market_dataset = &_market_dataset;
-        fast_period = 12;
-        slow_period = 26;
-        look_back = 20;
+        look_back = 25;
         action_space = std::vector<double>({-1.0, 0.0, 1.0}); // short, idle, long
 
         init({{100,100},{100,100},{100,100},{100,100},{100,50},{50,3}});
@@ -48,7 +44,7 @@ public:
         for(unsigned int m = 0; m < market_dataset->size(); m++) {
             Market *market = &market_dataset->at(m);
 
-            unsigned int start = (slow_period - 1) + (look_back - 1);
+            unsigned int start = look_back - 1;
             unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
             num_of_frames += terminal - start + 1;
         }

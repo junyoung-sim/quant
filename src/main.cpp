@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     std::vector<Market> market_dataset;
     for(std::string ticker: tickers) {
         std::cout << "Loading market data for " << ticker << "\n";
-        market_dataset.push_back(Market({ticker, "SPY", "TLT", "GOLD", "^VIX"}));
+        market_dataset.push_back(Market({ticker, "SPY", "TLT", "GOLD"}));
     }
 
     std::vector<std::string>().swap(tickers);

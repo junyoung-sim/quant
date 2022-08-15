@@ -43,14 +43,12 @@ std::vector<double> Quant::sample_state(unsigned int market_id, unsigned int t) 
     Market *market = &market_dataset->at(market_id);
     for(unsigned int i = 0; i < market->num_of_assets(); i++) {
         std::vector<double> *asset = market->asset(i);
-        std::vector<double> asset_t = {asset->begin() + t + 1 - (slow_period + look_back - 1), asset->begin() + t + 1};
-        std::vector<double> macd = moving_average_convergence_divergence(asset_t, fast_period, slow_period);
-        standardize(macd);
+        std::vector<double> asset_t = {asset->begin() + t + 1 - look_back, asset->begin() + t + 1};
+        standardize(asset_t);
 
-        state.insert(state.end(), macd.begin(), macd.end());
+        state.insert(state.end(), asset_t.begin(), asset_t.end());
 
         std::vector<double>().swap(asset_t);
-        std::vector<double>().swap(macd);
     }
 
     return state;
@@ -100,7 +98,7 @@ void Quant::optimize() {
 
     for(unsigned int m = 0; m < market_dataset->size(); m++) {
         Market *market = &market_dataset->at(m);
-        unsigned int start = (slow_period - 1) + (look_back - 1);
+        unsigned int start = look_back - 1;
         unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
 
         double benchmark = 0.00, model = 0.00;
@@ -135,7 +133,7 @@ void Quant::optimize() {
 
             std::vector<double> agent_q = agent.predict(state);
             loss_sum += pow(expected_reward - agent_q[action], 2);
-            mean_loss = loss_sum / frame_count;
+            mean_loss = loss_sum / (frame_count + 1);
 
             std::vector<double>().swap(agent_q);
 
