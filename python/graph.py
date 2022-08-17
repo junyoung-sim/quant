@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 log = open("./res/log", "r").readlines()
 
 loss, benchmark, model, eps, alpha = [], [], [], [], []
-relative_performance = []
 
 for line in log:
     if line != "\n":
@@ -15,7 +14,6 @@ for line in log:
         model.append(float(line.split(" ")[2]))
         eps.append(float(line.split(" ")[3]))
         alpha.append(float(line.split(" ")[4]))
-        relative_performance.append(model[-1] > benchmark[-1])
 
 plt.figure(figsize=(20,5))
 plt.subplot(1, 3, 1)
@@ -34,7 +32,3 @@ plt.plot(benchmark, color="green")
 plt.plot(model, color="orange")
 plt.title("Cumulative Return")
 plt.savefig("./res/performance.png")
-
-plt.figure(figsize=(30,8))
-plt.plot(relative_performance)
-plt.savefig("./res/relative_performance.png")
