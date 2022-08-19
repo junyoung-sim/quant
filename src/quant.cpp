@@ -113,12 +113,10 @@ void Quant::optimize() {
             std::vector<double> state = sample_state(m, t);
             unsigned int action = eps_greedy_policy(state, eps);
 
-            double diff = market->asset(MAIN_ASSET)->at(t+1) - market->asset(MAIN_ASSET)->at(t);
-            if(diff > 0.00) diff = 1.00;
-            else diff = -1.00;
-
+            double diff = market->asset(MAIN_ASSET)->at(t+1) - market->asset(MAIN_ASSET)->at(t) > 0.00 ? 1.00 : -1.00;
             double observed_reward = diff * action_space[action];
             double expected_reward = observed_reward;
+
             if(t != terminal) {
                 std::vector<double> next_state = sample_state(m, t+1);
                 std::vector<double> target_q = target.predict(next_state);
