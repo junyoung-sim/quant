@@ -32,10 +32,10 @@ public:
     Quant() {}
     Quant(std::vector<Market> &_market_dataset, std::string _checkpoint): checkpoint(_checkpoint) {
         market_dataset = &_market_dataset;
-        look_back = 25;
+        look_back = 50;
         action_space = std::vector<double>({-1.0, 0.0, 1.0}); // short, idle, long
 
-        init({{100,100},{100,100},{100,100},{100,100},{100,100},{100,3}});
+        init({{200,200},{200,200},{200,200},{200,200},{200,100},{100,3}});
         load();
 
         // --- //
