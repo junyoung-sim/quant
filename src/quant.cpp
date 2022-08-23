@@ -90,7 +90,6 @@ void Quant::optimize() {
     double gamma = 0.50;
     unsigned int batch_size = 10;
     unsigned int memory_capacity = (unsigned int)(num_of_frames * 0.10);
-    unsigned int sync_interval = 1000;
 
     std::vector<Memory> memory;
 
@@ -109,11 +108,6 @@ void Quant::optimize() {
 
         for(unsigned int t = start; t <= terminal; t++) {
             eps = std::max((eps_min - eps_init) / (unsigned int)(num_of_frames * 0.10) * frame_count + eps_init, eps_min);
-
-            if(frame_count % sync_interval == 0) sync();
-
-            // --- //
-
             std::vector<double> state = sample_state(m, t);
             unsigned int action = eps_greedy_policy(state, eps);
 
@@ -175,6 +169,7 @@ void Quant::optimize() {
         }
 
         std::system("./python/graph.py");
+        sync();
     }
 
     std::vector<Memory>().swap(memory);
