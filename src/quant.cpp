@@ -87,7 +87,7 @@ void Quant::optimize() {
     double alpha_init = 0.00001;
     double alpha_min = 0.000001;
     double lambda = 0.05;
-    double gamma = 0.50;
+    double gamma = 0.80;
     unsigned int batch_size = 10;
     unsigned int memory_capacity = (unsigned int)(num_of_frames * 0.10);
 
