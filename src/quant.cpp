@@ -85,7 +85,7 @@ void Quant::optimize() {
     double eps_init = 1.00;
     double eps_min = 0.10;
     double alpha_init = 0.00001;
-    double alpha_min = 0.000001;
+    double alpha_min = 0.0000001;
     double lambda = 0.05;
     double gamma = 0.80;
     unsigned int batch_size = 10;
