@@ -103,16 +103,16 @@ void Quant::optimize() {
         Market *market = &market_dataset->at(m);
         unsigned int start = look_back - 1;
         unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
-
-        double benchmark = 0.00, model = 0.00;
+ 
+        double benchmark = 1.00, model = 1.00;
 
         for(unsigned int t = start; t <= terminal; t++) {
             eps = std::max((eps_min - eps_init) / (unsigned int)(num_of_frames * 0.10) * frame_count + eps_init, eps_min);
             std::vector<double> state = sample_state(m, t);
             unsigned int action = eps_greedy_policy(state, eps);
 
-            double diff = market->asset(MAIN_ASSET)->at(t+1) - market->asset(MAIN_ASSET)->at(t) > 0.00 ? 1.00 : -1.00;
-            double observed_reward = diff * action_space[action];
+            double diff = (market->asset(MAIN_ASSET)->at(t+1) - market->asset(MAIN_ASSET)->at(t)) / market->asset(MAIN_ASSET)->at(t);
+            double observed_reward = (diff >= 0.00 ? action_space[action] : -action_space[action]);
             double expected_reward = observed_reward;
 
             if(t != terminal) {
@@ -126,8 +126,8 @@ void Quant::optimize() {
 
             // --- //
 
-            benchmark += diff;
-            model += observed_reward;
+            benchmark *= 1.00 + diff;
+            model *= 1.00 + diff * action_space[action];
 
             std::vector<double> agent_q = agent.predict(state);
             loss_sum += pow(expected_reward - agent_q[action], 2);
@@ -136,11 +136,11 @@ void Quant::optimize() {
             std::vector<double>().swap(agent_q);
 
             std::ofstream log("./res/log", std::ios::app);
-            log << mean_loss << " " << benchmark << " " << model << " " << eps << " " << alpha << "\n";
+            log << benchmark << " " << model << "\n";
             log.close();
 
+            std::cout << "(loss=" << mean_loss << ", eps=" << eps << ", alpha=" << alpha << ") ";
             std::cout << "frame-" << frame_count << " @ " << market->ticker(MAIN_ASSET) << ": ";
-            std::cout << "(eps=" << eps << ", alpha=" << alpha << ") ";
             std::cout << "action=" << action << " -> " << "observed=" << observed_reward << ", expected=" << expected_reward << ", ";
             std::cout << "benchmark=" << benchmark << ", model=" << model << "\n";
 
@@ -168,7 +168,9 @@ void Quant::optimize() {
             }
         }
 
-        std::system("./python/graph.py");
+        std::system(("./python/graph.py " + market->ticker(MAIN_ASSET)).c_str());
+        std::system("rm ./res/log");
+
         sync();
     }
 

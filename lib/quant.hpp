@@ -6,8 +6,6 @@
 #include <string>
 #include <random>
 
-#include <iostream>
-
 #include "../lib/data.hpp"
 #include "../lib/net.hpp"
 
