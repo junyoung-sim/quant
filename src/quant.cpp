@@ -86,7 +86,7 @@ void Quant::optimize() {
     double eps_init = 1.00;
     double eps_min = 0.10;
     double alpha_init = 0.00001;
-    double alpha_min = 0.0000001;
+    double alpha_min = 0.00000001;
     double lambda = 0.05;
     double gamma = 0.80;
     unsigned int batch_size = 10;
@@ -158,7 +158,7 @@ void Quant::optimize() {
                 std::shuffle(index.begin(), index.end(), seed);
                 index.erase(index.begin() + batch_size, index.end());
 
-                alpha = alpha_init * pow(alpha_min / alpha_init, (frame_count - memory_capacity) / (num_of_frames - memory_capacity));
+                alpha = (alpha_min - alpha_init) / (num_of_frames - memory_capacity) * (frame_count - memory_capacity) + alpha_init;
 
                 for(unsigned int k: index)
                     sgd(memory[k], alpha, lambda);
