@@ -5,6 +5,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <cmath>
 
 #include "../lib/quant.hpp"
 
@@ -157,7 +158,7 @@ void Quant::optimize() {
                 std::shuffle(index.begin(), index.end(), seed);
                 index.erase(index.begin() + batch_size, index.end());
 
-                alpha = std::max((alpha_min - alpha_init) / (num_of_frames - memory_capacity) * (frame_count - memory_capacity) + alpha_init, alpha_min);
+                alpha = alpha_init * pow(alpha_min / alpha_init, (frame_count - memory_capacity) / (num_of_frames - memory_capacity));
 
                 for(unsigned int k: index)
                     sgd(memory[k], alpha, lambda);
