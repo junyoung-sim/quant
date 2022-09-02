@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include <vector>
 #include <string>
@@ -15,24 +14,20 @@ std::vector<double> read_csv(std::string path, std::string column) {
         std::string header;
         std::getline(source, header);
         unsigned int delimiter_count = 0;
-        for(unsigned int i = 0; i < static_cast<unsigned int>(header.find(column)); i++) {
-            if(header[i] == ',')
-                delimiter_count++;
-        }
+        for(unsigned int i = 0; i < static_cast<unsigned int>(header.find(column)); i++)
+            delimiter_count += (header[i] == ',');
 
         std::string line, val;
         while(std::getline(source, line)) {
             unsigned int dc = 0;
-            for(unsigned int i = 0; i < line.length(); i++) {
-                if(dc == delimiter_count) {
-                    if(line[i] != ',')
-                        val += line[i];
+            for(char &ch: line) {
+                if(dc != delimiter_count)
+                    dc += (ch == ',');
+                else {
+                    if(ch != ',')
+                        val += ch;
                     else
                         break;
-                }
-                else {
-                    if(line[i] == ',')
-                        dc++;
                 }
             }
 

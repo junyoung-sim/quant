@@ -18,7 +18,7 @@ private:
     NeuralNetwork target;
     std::default_random_engine seed;
 
-    std::vector<Market> *market_dataset;
+    std::vector<Market> *dataset;
     unsigned int num_of_frames;
 
     unsigned int look_back;
@@ -28,8 +28,8 @@ private:
 
 public:
     Quant() {}
-    Quant(std::vector<Market> &_market_dataset, std::string _checkpoint): checkpoint(_checkpoint) {
-        market_dataset = &_market_dataset;
+    Quant(std::vector<Market> &_dataset, std::string _checkpoint): checkpoint(_checkpoint) {
+        dataset = &_dataset;
         look_back = 100;
         action_space = std::vector<double>({-1.0, 0.0, 1.0}); // short, idle, long
 
@@ -39,8 +39,8 @@ public:
         // --- //
 
         num_of_frames = 0;
-        for(unsigned int m = 0; m < market_dataset->size(); m++) {
-            Market *market = &market_dataset->at(m);
+        for(unsigned int m = 0; m < dataset->size(); m++) {
+            Market *market = &dataset->at(m);
 
             unsigned int start = look_back - 1;
             unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
@@ -48,7 +48,7 @@ public:
         }
     }
     ~Quant() {
-        std::vector<Market>().swap(*market_dataset);
+        std::vector<Market>().swap(*dataset);
         std::vector<double>().swap(action_space);
 
         save();

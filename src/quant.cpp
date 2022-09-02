@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include <vector>
 #include <string>
@@ -41,7 +40,7 @@ void Quant::sync() {
 
 std::vector<double> Quant::sample_state(unsigned int market_id, unsigned int t) {
     std::vector<double> state;
-    Market *market = &market_dataset->at(market_id);
+    Market *market = &dataset->at(market_id);
     for(unsigned int i = 0; i < market->num_of_assets(); i++) {
         std::vector<double> *asset = market->asset(i);
         std::vector<double> asset_t = {asset->begin() + t + 1 - look_back, asset->begin() + t + 1};
@@ -91,27 +90,26 @@ void Quant::optimize() {
 
     double alpha_init = 0.00001;
     double alpha_min = 0.00000001;
-    double alpha_decay = 0.90;
-    double arg_alpha_min = (log10(alpha_min) - log10(alpha_init)) / log10(alpha_decay);
+    double alpha_decay = log(alpha_min) - log(alpha_init);
     double lambda = 0.05;
 
     std::vector<Memory> memory;
 
     double eps = eps_init;
     double alpha = alpha_init;
-    unsigned int frame_count = 0;
+    unsigned int frame = 0;
 
     double loss_sum = 0.00, mean_loss = 0.00;
 
-    for(unsigned int m = 0; m < market_dataset->size(); m++) {
-        Market *market = &market_dataset->at(m);
+    for(unsigned int m = 0; m < dataset->size(); m++) {
+        Market *market = &dataset->at(m);
         unsigned int start = look_back - 1;
         unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
  
         double benchmark = 1.00, model = 1.00;
 
         for(unsigned int t = start; t <= terminal; t++) {
-            eps = std::max((eps_min - eps_init) / (unsigned int)(num_of_frames * 0.10) * frame_count + eps_init, eps_min);
+            eps = std::max((eps_min - eps_init) / (unsigned int)(num_of_frames * 0.10) * frame + eps_init, eps_min);
             std::vector<double> state = sample_state(m, t);
             unsigned int action = eps_greedy_policy(state, eps);
 
@@ -135,7 +133,7 @@ void Quant::optimize() {
 
             std::vector<double> agent_q = agent.predict(state);
             loss_sum += pow(expected_reward - agent_q[action], 2);
-            mean_loss = loss_sum / (frame_count + 1);
+            mean_loss = loss_sum / (frame + 1);
 
             std::vector<double>().swap(agent_q);
 
@@ -144,14 +142,14 @@ void Quant::optimize() {
             log.close();
 
             std::cout << "(loss=" << mean_loss << ", eps=" << eps << ", alpha=" << alpha << ") ";
-            std::cout << "frame-" << frame_count << " @ " << market->ticker(MAIN_ASSET) << ": ";
+            std::cout << "frame-" << frame << " @ " << market->ticker(MAIN_ASSET) << ": ";
             std::cout << "action=" << action << " -> " << "observed=" << observed_reward << ", expected=" << expected_reward << ", ";
             std::cout << "benchmark=" << benchmark << ", model=" << model << "\n";
 
             memory.push_back(Memory(state, action, expected_reward));
             std::vector<double>().swap(state);
 
-            frame_count++;
+            frame++;
 
             // --- //
 
@@ -161,7 +159,7 @@ void Quant::optimize() {
                 std::shuffle(index.begin(), index.end(), seed);
                 index.erase(index.begin() + batch_size, index.end());
 
-                alpha = alpha_init * pow(alpha_decay, arg_alpha_min * (frame_count - memory_capacity) / (num_of_frames - memory_capacity));
+                alpha = alpha_init * exp(alpha_decay * (frame - memory_capacity) / (num_of_frames - memory_capacity));
 
                 for(unsigned int k: index)
                     sgd(memory[k], alpha, lambda);

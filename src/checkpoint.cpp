@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include <fstream>
 #include <vector>
@@ -44,4 +43,4 @@ void Quant::load() {
         sync();
         out.close();
     }
- }
+}

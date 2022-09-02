@@ -1,7 +1,6 @@
 #ifndef __DATA_HPP_
 #define __DATA_HPP_
 
-#include <cstdlib>
 #include <vector>
 #include <string>
 
@@ -25,8 +24,7 @@ public:
         std::string cmd = "./python/clean.py ";
         for(unsigned int i = 0; i < tickers.size(); i++) {
             cmd += tickers[i];
-            if(i != tickers.size() - 1)
-                cmd += " ";
+            if(i != tickers.size() - 1) cmd += " ";
         }
         std::system(cmd.c_str());
 

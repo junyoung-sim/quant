@@ -4,17 +4,18 @@ import sys
 import pandas as pd
 
 def main():
-    tickers = [sys.argv[i] for i in range(1, len(sys.argv))]
+    tickers = sys.argv[1:]
 
-    df = pd.read_csv("./data/{}.csv" .format(tickers[0]))[["Date", "Adj Close"]]
-    df = df.rename(columns={"Adj Close": tickers[0]})
-
-    for i in range(1, len(tickers)):
+    df = None
+    for i in range(len(tickers)):
         asset = pd.read_csv("./data/{}.csv" .format(tickers[i]))[["Date", "Adj Close"]]
         asset = asset[asset['Adj Close'].notna()]
         asset = asset.rename(columns={"Adj Close": tickers[i]})
 
-        df = df.merge(asset, on="Date")
+        if i == 0:
+            df = asset
+        else:
+            df = df.merge(asset, on="Date")
 
     df.to_csv("./data/cleaned.csv")
 
