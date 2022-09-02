@@ -10,12 +10,8 @@ int main(int argc, char *argv[])
 {
     std::vector<std::string> tickers;
     unsigned int arg = 0;
-    while(true) {
-        if(strcmp(argv[++arg], "/") != 0)
-            tickers.push_back(argv[arg]);
-        else
-            break;
-    }
+    while(strcmp(argv[++arg], "/") != 0)
+        tickers.push_back(argv[arg]);
 
     std::string checkpoint = argv[++arg];
 
@@ -24,7 +20,7 @@ int main(int argc, char *argv[])
     std::vector<Market> market_dataset;
     for(std::string ticker: tickers) {
         std::cout << "Loading market data for " << ticker << "\n";
-        market_dataset.push_back(Market({ticker, "DIA", "^TNX", "IEF", "GSG"}));
+        market_dataset.push_back(Market({ticker, "SPY", "^TNX", "IEF", "GSG"}));
     }
 
     std::vector<std::string>().swap(tickers);
