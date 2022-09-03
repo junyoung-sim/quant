@@ -57,7 +57,7 @@ public:
     void init(std::vector<std::vector<unsigned int>> shape);
     void sync();
 
-    std::vector<double> sample_state(unsigned int market_id, unsigned int t);
+    std::vector<double> sample_state(Market *market, unsigned int t);
 
     unsigned int policy(std::vector<double> &state);
     unsigned int eps_greedy_policy(std::vector<double> &state, double eps);

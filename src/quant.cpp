@@ -38,9 +38,8 @@ void Quant::sync() {
 
 // --- //
 
-std::vector<double> Quant::sample_state(unsigned int market_id, unsigned int t) {
+std::vector<double> Quant::sample_state(Market *market, unsigned int t) {
     std::vector<double> state;
-    Market *market = &dataset->at(market_id);
     for(unsigned int i = 0; i < market->num_of_assets(); i++) {
         std::vector<double> *asset = market->asset(i);
         std::vector<double> asset_t = {asset->begin() + t + 1 - look_back, asset->begin() + t + 1};
@@ -110,7 +109,7 @@ void Quant::optimize() {
 
         for(unsigned int t = start; t <= terminal; t++) {
             eps = std::max((eps_min - eps_init) / (unsigned int)(num_of_frames * 0.10) * frame + eps_init, eps_min);
-            std::vector<double> state = sample_state(m, t);
+            std::vector<double> state = sample_state(market, t);
             unsigned int action = eps_greedy_policy(state, eps);
 
             double diff = (market->asset(MAIN_ASSET)->at(t+1) - market->asset(MAIN_ASSET)->at(t)) / market->asset(MAIN_ASSET)->at(t);
@@ -118,7 +117,7 @@ void Quant::optimize() {
             double expected_reward = observed_reward;
 
             if(t != terminal) {
-                std::vector<double> next_state = sample_state(m, t+1);
+                std::vector<double> next_state = sample_state(market, t+1);
                 std::vector<double> target_q = target.predict(next_state);
                 expected_reward += gamma * *std::max_element(target_q.begin(), target_q.end());
 
