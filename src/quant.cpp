@@ -100,6 +100,7 @@ void Quant::optimize() {
 
     double loss_sum = 0.00, mean_loss = 0.00;
 
+    std::shuffle(dataset->begin(), dataset->end(), seed);
     for(unsigned int m = 0; m < dataset->size(); m++) {
         Market *market = &dataset->at(m);
         unsigned int start = look_back - 1;
@@ -136,9 +137,9 @@ void Quant::optimize() {
 
             std::vector<double>().swap(agent_q);
 
-            std::ofstream log("./res/log", std::ios::app);
-            log << benchmark << " " << model << "\n";
-            log.close();
+            std::ofstream out("./res/log", std::ios::app);
+            out << benchmark << " " << model << "\n";
+            out.close();
 
             std::cout << "(loss=" << mean_loss << ", eps=" << eps << ", alpha=" << alpha << ") ";
             std::cout << "frame-" << frame << " @ " << market->ticker(MAIN_ASSET) << ": ";
