@@ -78,7 +78,7 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
 
 // --- //
 
-void Quant::optimize() {
+void Quant::build() {
     double eps_init = 1.00;
     double eps_min = 0.10;
     double gamma = 0.80;

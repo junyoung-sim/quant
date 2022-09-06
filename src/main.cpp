@@ -7,8 +7,11 @@
 
 int main(int argc, char *argv[])
 {
-    std::vector<std::string> tickers;
     unsigned int arg = 0;
+
+    std::string mode = argv[++arg];
+
+    std::vector<std::string> tickers;
     while(strcmp(argv[++arg], "/") != 0)
         tickers.push_back(argv[arg]);
 
@@ -27,7 +30,13 @@ int main(int argc, char *argv[])
     // --- //
 
     Quant quant(dataset, checkpoint);
-    quant.optimize();
+
+    if(mode == "build")
+        quant.build();
+    else if(mode == "run")
+        quant.run();
+    else
+        std::cout << "Invalid mode given!\n";
 
     return 0;
 }

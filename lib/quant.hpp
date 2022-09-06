@@ -62,7 +62,7 @@ public:
     unsigned int policy(std::vector<double> &state);
     unsigned int eps_greedy_policy(std::vector<double> &state, double eps);
 
-    void optimize();
+    void build();
     void sgd(Memory &memory, double alpha, double lambda);
 
     void run();
