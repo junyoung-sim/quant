@@ -194,7 +194,7 @@ void Quant::sgd(Memory &memory, double alpha, double lambda) {
 
             for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
                 if(l == 0)
-                    gradient = partial_gradient * (*memory.state())[i];
+                    gradient = partial_gradient * memory.state()->at(i);
                 else {
                     gradient = partial_gradient * agent.layer(l-1)->node(i)->act();
                     agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
