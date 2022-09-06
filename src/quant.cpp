@@ -219,10 +219,9 @@ void Quant::run() {
         Market *market = &dataset->at(m);
         std::vector<double> state = sample_state(market, market->asset(MAIN_ASSET)->size() - 1);
         unsigned int action = policy(state);
-        double action_q_value = agent.layer(agent.num_of_layers() - 1)->node(action)->sum();
         action_count[action] += 1;
 
-        std::cout << market->ticker(MAIN_ASSET) << ": action=" << action << ", q-value=" << action_q_value << "\n";
+        std::cout << market->ticker(MAIN_ASSET) << ": action=" << action << "\n";
 
         std::vector<double>().swap(state);
     }
