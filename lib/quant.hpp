@@ -65,6 +65,8 @@ public:
     void optimize();
     void sgd(Memory &memory, double alpha, double lambda);
 
+    void run();
+
     void save();
     void load();
 };

@@ -63,17 +63,15 @@ unsigned int Quant::policy(std::vector<double> &state) {
 }
 
 unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
-    unsigned int action;
+    unsigned int action = policy(state);
     double explore = (double)rand() / RAND_MAX;
 
     if(explore < eps) {
         action = rand() % agent.layer(agent.num_of_layers() - 1)->out_features();
         std::cout << "(E) ";
     }
-    else {
-        action = policy(state);
+    else
         std::cout << "(P) ";
-    }
 
     return action;
 }
@@ -112,6 +110,7 @@ void Quant::optimize() {
             eps = std::max((eps_min - eps_init) / (unsigned int)(num_of_frames * 0.10) * frame + eps_init, eps_min);
             std::vector<double> state = sample_state(market, t);
             unsigned int action = eps_greedy_policy(state, eps);
+            double action_q_value = agent.layer(agent.num_of_layers() - 1)->node(action)->sum();
 
             double diff = (market->asset(MAIN_ASSET)->at(t+1) - market->asset(MAIN_ASSET)->at(t)) / market->asset(MAIN_ASSET)->at(t);
             double observed_reward = (diff >= 0.00 ? action_space[action] : -action_space[action]);
@@ -131,11 +130,8 @@ void Quant::optimize() {
             benchmark *= 1.00 + diff;
             model *= 1.00 + diff * action_space[action];
 
-            std::vector<double> agent_q = agent.predict(state);
-            loss_sum += pow(expected_reward - agent_q[action], 2);
+            loss_sum += pow(expected_reward - action_q_value, 2);
             mean_loss = loss_sum / (frame + 1);
-
-            std::vector<double>().swap(agent_q);
 
             std::ofstream out("./res/log", std::ios::app);
             out << benchmark << " " << model << "\n";
@@ -213,4 +209,19 @@ void Quant::sgd(Memory &memory, double alpha, double lambda) {
     }
 
     std::vector<double>().swap(agent_q);
+}
+
+// --- //
+
+void Quant::run() {
+    for(unsigned int m = 0; m < dataset->size(); m++) {
+        Market *market = &dataset->at(m);
+        std::vector<double> state = sample_state(market, market->asset(MAIN_ASSET)->size() - 1);
+        unsigned int action = policy(state);
+        double action_q_value = agent.layer(agent.num_of_layers() - 1)->node(action)->sum();
+
+        std::cout << market->ticker(MAIN_ASSET) << ": action=" << action << ", q-value=" << action_q_value << "\n";
+
+        std::vector<double>().swap(state);
+    }
 }
