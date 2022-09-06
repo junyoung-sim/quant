@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
         std::cout << "Loading market data for " << ticker << "\n";
         dataset.push_back(Market({ticker, "SPY", "^TNX", "IEF", "GSG"}));
     }
+    std::cout << "\n";
 
     std::vector<std::string>().swap(tickers);
 

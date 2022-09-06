@@ -214,14 +214,20 @@ void Quant::sgd(Memory &memory, double alpha, double lambda) {
 // --- //
 
 void Quant::run() {
+    int action_count[3] = {0, 0, 0};
     for(unsigned int m = 0; m < dataset->size(); m++) {
         Market *market = &dataset->at(m);
         std::vector<double> state = sample_state(market, market->asset(MAIN_ASSET)->size() - 1);
         unsigned int action = policy(state);
         double action_q_value = agent.layer(agent.num_of_layers() - 1)->node(action)->sum();
+        action_count[action] += 1;
 
         std::cout << market->ticker(MAIN_ASSET) << ": action=" << action << ", q-value=" << action_q_value << "\n";
 
         std::vector<double>().swap(state);
     }
+
+    std::cout << "\naction (0) = " << (double)action_count[0] / dataset->size() * 100 << "%\n";
+    std::cout << "action (1) = " << (double)action_count[1] / dataset->size() * 100 << "%\n";
+    std::cout << "action (2) = " << (double)action_count[2] / dataset->size() * 100 << "%\n";
 }
