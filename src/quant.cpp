@@ -213,6 +213,36 @@ void Quant::sgd(Memory &memory, double alpha, double lambda) {
 
 // --- //
 
+void Quant::test() {
+    for(unsigned int m = 0; m < dataset->size(); m++) {
+        Market *market = &dataset->at(m);
+        unsigned int start = look_back - 1;
+        unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
+
+        double benchmark = 1.00, model = 1.00;
+
+        std::cout << "Testing on " << market->ticker(MAIN_ASSET) << "...\n";
+
+        for(unsigned int t = start; t <= terminal; t++) {
+            std::vector<double> state = sample_state(market, t);
+            unsigned action = policy(state);
+
+            double diff = (market->asset(MAIN_ASSET)->at(t+1) - market->asset(MAIN_ASSET)->at(t)) / market->asset(MAIN_ASSET)->at(t);
+            benchmark *= 1.00 + diff;
+            model *= 1.00 + diff * action_space[action];
+
+            std::ofstream out("./res/log", std::ios::app);
+            out << benchmark << " " << model << "\n";
+            out.close();
+
+            std::vector<double>().swap(state);
+        }
+
+        std::system(("./python/graph.py " + market->ticker(MAIN_ASSET)).c_str());
+        std::system("rm ./res/log");
+    }
+}
+
 void Quant::run() {
     int action_count[3] = {0, 0, 0};
     for(unsigned int m = 0; m < dataset->size(); m++) {

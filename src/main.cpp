@@ -34,6 +34,8 @@ int main(int argc, char *argv[])
 
     if(mode == "build")
         quant.build();
+    else if(mode == "test")
+        quant.test();
     else if(mode == "run")
         quant.run();
     else
