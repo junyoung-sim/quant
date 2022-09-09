@@ -4,15 +4,14 @@ import sys
 import pandas as pd
 
 def main():
-    tickers = sys.argv[1:]
-
     df = None
-    for i in range(len(tickers)):
-        asset = pd.read_csv("./data/{}.csv" .format(tickers[i]))[["Date", "Adj Close"]]
+    for i in range(1, len(sys.argv)):
+        ticker = sys.argv[i]
+        asset = pd.read_csv("./data/{}.csv" .format(ticker))[["Date", "Adj Close"]]
         asset = asset[asset['Adj Close'].notna()]
-        asset = asset.rename(columns={"Adj Close": tickers[i]})
+        asset = asset.rename(columns={"Adj Close": ticker})
 
-        if i == 0:
+        if i == 1:
             df = asset
         else:
             df = df.merge(asset, on="Date")
