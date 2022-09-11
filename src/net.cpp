@@ -13,8 +13,6 @@ double relu_prime(double x) {
     return x > 0.00 ? 1.00 : 0.00;
 }
 
-// --- //
-
 double Node::bias() {
     return b;
 }
@@ -61,8 +59,6 @@ void Node::set_weight(unsigned int index, double val) {
     w[index] = val;
 }
 
-// --- //
-
 unsigned int Layer::in_features() {
     return in;
 }
@@ -75,18 +71,16 @@ Node *Layer::node(unsigned int index) {
     return &n[index];
 }
 
-// --- //
-
 void NeuralNetwork::add_layer(unsigned int in, unsigned int out) {
     layers.push_back(Layer(in, out));
 }
 
 void NeuralNetwork::init(std::default_random_engine &seed) {
     std::normal_distribution<double> std_normal(0.0, 1.0);
-    for(Layer &layer: layers) {
-        for(unsigned int n = 0; n < layer.out_features(); n++) {
-            for(unsigned int i = 0; i < layer.in_features(); i++)
-                layer.node(n)->set_weight(i, std_normal(seed) * sqrt(2.00 / layer.in_features()));
+    for(unsigned int l = 0; l < layers.size(); l++) {
+        for(unsigned int n = 0; n < layers[l].out_features(); n++) {
+            for(unsigned int i = 0; i < layers[l].in_features(); i++)
+                layers[l].node(n)->set_weight(i, std_normal(seed) * sqrt(2.00 / layers[l].in_features()));
         }
     }
 }
@@ -115,9 +109,9 @@ std::vector<double> NeuralNetwork::predict(std::vector<double> &x) {
             layers[l].node(n)->set_sum(matmul + layers[l].node(n)->bias());
 
             if(l == layers.size() - 1)
-                yhat.push_back(layers[l].node(n)->sum()); // output layer (q-values)
+                yhat.push_back(layers[l].node(n)->sum());
             else
-                layers[l].node(n)->set_act(relu(layers[l].node(n)->sum())); // hidden layer (relu)
+                layers[l].node(n)->set_act(relu(layers[l].node(n)->sum()));
         }
     }
 

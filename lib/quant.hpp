@@ -11,6 +11,9 @@
 
 #define MAIN_ASSET 0
 
+void update_log(double mean_loss, double eps, double alpha, unsigned int frame, std::string ticker,
+                unsigned int action, double observed_reward, double expected_reward, double benchmark, double model);
+
 class Quant
 {
 private:
@@ -28,15 +31,12 @@ private:
 
 public:
     Quant() {}
-    Quant(std::vector<Market> &_dataset, std::string _checkpoint): checkpoint(_checkpoint) {
-        dataset = &_dataset;
+    Quant(std::vector<Market> &_dataset, std::string _checkpoint): dataset(&_dataset), checkpoint(_checkpoint) {
         look_back = 100;
-        action_space = std::vector<double>({-1.0, 0.0, 1.0}); // short, idle, long
+        action_space = std::vector<double>({-1.0, 0.0, 1.0});
 
         init({{500,450},{450,400},{400,350},{350,300},{300,250},{250,3}});
         load();
-
-        // --- //
 
         num_of_frames = 0;
         for(unsigned int m = 0; m < dataset->size(); m++) {
@@ -48,9 +48,7 @@ public:
         }
     }
     ~Quant() {
-        std::vector<Market>().swap(*dataset);
         std::vector<double>().swap(action_space);
-
         save();
     }
 

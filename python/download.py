@@ -3,5 +3,5 @@
 import sys
 import yfinance as yf
 
-for ticker in open("./data/tickers", "r").readline().split():
+for ticker in sys.argv[1:]:
     yf.download(ticker).to_csv("./data/{}.csv" .format(ticker))

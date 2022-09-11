@@ -8,6 +8,18 @@
 
 #include "../lib/quant.hpp"
 
+void update_log(double mean_loss, double eps, double alpha, unsigned int frame, std::string ticker,
+                unsigned int action, double observed_reward, double expected_reward, double benchmark, double model) {
+    std::ofstream out("./res/log", std::ios::app);
+    out << benchmark << " " << model << "\n";
+    out.close();
+
+    std::cout << "(loss=" << mean_loss << ", eps=" << eps << ", alpha=" << alpha << ") ";
+    std::cout << "frame-" << frame << " @ " << ticker << ": ";
+    std::cout << "action=" << action << " -> " << "observed=" << observed_reward << ", expected=" << expected_reward << ", ";
+    std::cout << "benchmark=" << benchmark << ", model=" << model << "\n";
+}
+
 void Quant::init(std::vector<std::vector<unsigned int>> shape) {
     for(unsigned int l = 0; l < shape.size(); l++) {
         unsigned int in = shape[l][0], out = shape[l][1];
@@ -35,8 +47,6 @@ void Quant::sync() {
         }
     }
 }
-
-// --- //
 
 std::vector<double> Quant::sample_state(Market *market, unsigned int t) {
     std::vector<double> state;
@@ -75,8 +85,6 @@ unsigned int Quant::eps_greedy_policy(std::vector<double> &state, double eps) {
 
     return action;
 }
-
-// --- //
 
 void Quant::build() {
     double eps_init = 1.00;
@@ -125,29 +133,18 @@ void Quant::build() {
                 std::vector<double>().swap(target_q);
             }
 
-            // --- //
-
             benchmark *= 1.00 + diff;
             model *= 1.00 + diff * action_space[action];
 
             loss_sum += pow(expected_reward - action_q_value, 2);
             mean_loss = loss_sum / (frame + 1);
 
-            std::ofstream out("./res/log", std::ios::app);
-            out << benchmark << " " << model << "\n";
-            out.close();
-
-            std::cout << "(loss=" << mean_loss << ", eps=" << eps << ", alpha=" << alpha << ") ";
-            std::cout << "frame-" << frame << " @ " << market->ticker(MAIN_ASSET) << ": ";
-            std::cout << "action=" << action << " -> " << "observed=" << observed_reward << ", expected=" << expected_reward << ", ";
-            std::cout << "benchmark=" << benchmark << ", model=" << model << "\n";
+            update_log(mean_loss, eps, alpha, frame, market->ticker(MAIN_ASSET), action, observed_reward, expected_reward, benchmark, model);
 
             memory.push_back(Memory(state, action, expected_reward));
             std::vector<double>().swap(state);
 
             frame++;
-
-            // --- //
 
             if(memory.size() == memory_capacity) {
                 std::vector<unsigned int> index(memory_capacity, 0);
@@ -166,9 +163,7 @@ void Quant::build() {
             }
         }
 
-        std::system(("./python/log.py " + market->ticker(MAIN_ASSET)).c_str());
-        std::system("rm ./res/log");
-
+        std::system(("./python/log.py " + market->ticker(MAIN_ASSET) + " && rm ./res/log").c_str());
         sync();
     }
 
@@ -211,8 +206,6 @@ void Quant::sgd(Memory &memory, double alpha, double lambda) {
     std::vector<double>().swap(agent_q);
 }
 
-// --- //
-
 void Quant::test() {
     for(unsigned int m = 0; m < dataset->size(); m++) {
         Market *market = &dataset->at(m);
@@ -231,20 +224,17 @@ void Quant::test() {
             benchmark *= 1.00 + diff;
             model *= 1.00 + diff * action_space[action];
 
-            std::ofstream out("./res/log", std::ios::app);
-            out << benchmark << " " << model << "\n";
-            out.close();
+            update_log(0.00, 0.00, 0.00, t, market->ticker(MAIN_ASSET), action, 0.00, 0.00, benchmark, model);
 
             std::vector<double>().swap(state);
         }
 
-        std::system(("./python/log.py " + market->ticker(MAIN_ASSET)).c_str());
-        std::system("rm ./res/log");
+        std::system(("./python/log.py " + market->ticker(MAIN_ASSET) + " && rm ./res/log").c_str());
     }
 }
 
 void Quant::run() {
-    int action_count[3] = {0, 0, 0};
+    unsigned int action_count[3] = {0, 0, 0};
     for(unsigned int m = 0; m < dataset->size(); m++) {
         Market *market = &dataset->at(m);
         std::vector<double> state = sample_state(market, market->asset(MAIN_ASSET)->size() - 1);

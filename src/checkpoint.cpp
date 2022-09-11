@@ -29,10 +29,10 @@ void Quant::load() {
                 std::getline(out, line);
 
                 for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
-                    double weight = std::stod(line.substr(0, static_cast<unsigned int>(line.find(" "))));
+                    double weight = std::stod(line.substr(0, line.find(" ")));
                     agent.layer(l)->node(n)->set_weight(i, weight);
 
-                    line = line.substr(static_cast<unsigned int>(line.find(" ")) + 1);
+                    line = line.substr(line.find(" ") + 1);
                 }
 
                 double bias = std::stod(line);

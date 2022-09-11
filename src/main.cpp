@@ -5,41 +5,59 @@
 
 #include "../lib/quant.hpp"
 
-int main(int argc, char *argv[])
-{
-    unsigned int arg = 0;
+std::string cmd = "";
+std::string mode = "";
+std::vector<std::string> tickers;
+std::string checkpoint = "";
+std::vector<Market> dataset;
+Quant *quant;
 
-    std::string mode = argv[++arg];
+#define VALID_MODE (mode == "build" || mode == "test" || mode == "run")
+#define VALID_TICKERS (tickers.size() > 0)
+#define VALID_CHECKPOINT (checkpoint.find("./models/") == 0)
 
-    std::vector<std::string> tickers;
-    while(strcmp(argv[++arg], "/") != 0)
-        tickers.push_back(argv[arg]);
+void boot(int argc, char *argv[]) {
+    unsigned int arg = 1;
+    mode = argv[arg++];
+    while(arg <= argc - 2)
+        tickers.push_back(argv[arg++]);
+    if(arg == argc - 1)
+        checkpoint = argv[arg];
+}
 
-    std::string checkpoint = argv[++arg];
-
-    // --- //
-
-    std::vector<Market> dataset;
-    for(std::string &ticker: tickers) {
-        std::cout << "Loading market data for " << ticker << "\n";
-        dataset.push_back(Market({ticker, "SPY", "^TNX", "IEF", "GSG"}));
-    }
-    std::cout << "\n";
-
+int terminate() {
     std::vector<std::string>().swap(tickers);
-
-    // --- //
-
-    Quant quant(dataset, checkpoint);
-
-    if(mode == "build")
-        quant.build();
-    else if(mode == "test")
-        quant.test();
-    else if(mode == "run")
-        quant.run();
-    else
-        std::cout << "Invalid mode given!\n";
+    std::vector<Market>().swap(dataset);
+    delete quant;
 
     return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    boot(argc, argv);
+
+    if(VALID_MODE && VALID_TICKERS && VALID_CHECKPOINT) {
+        std::cout << "Downloading SPY ^TNX IEF GSG\n";
+        cmd = "./python/download.py SPY ^TNX IEF GSG";
+        std::system(cmd.c_str());
+
+        for(std::string &ticker: tickers) {
+            std::cout << "Downloading " << ticker << "\n";
+            cmd = "./python/download.py " + ticker + " && ./python/clean.py " + ticker + " SPY ^TNX IEF GSG";
+            std::system(cmd.c_str());
+
+            dataset.push_back(Market({ticker, "SPY", "^TNX", "IEF", "GSG"}));
+        }
+
+        quant = new Quant(dataset, checkpoint);
+
+        if(mode == "build") quant->build();
+        else if(mode == "test") quant->test();
+        else quant->run();
+    }
+    else
+        std::cout << "Boot-time failure!\n";
+
+    terminate();
 }

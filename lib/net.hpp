@@ -12,10 +12,10 @@ double relu_prime(double x);
 class Node
 {
 private:
-    double b; // bias
-    double s; // sum
-    double z; // activation
-    double e; // error
+    double b;
+    double s;
+    double z;
+    double e;
     std::vector<double> w;
 public:
     Node() {}
@@ -42,8 +42,6 @@ public:
     void set_weight(unsigned int index, double val);
 };
 
-// --- //
-
 class Layer
 {
 private:
@@ -64,8 +62,6 @@ public:
 
     Node *node(unsigned int index);
 };
-
-// --- //
 
 class NeuralNetwork
 {

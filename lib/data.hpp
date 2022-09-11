@@ -1,16 +1,13 @@
 #ifndef __DATA_HPP_
 #define __DATA_HPP_
 
+#include <cstdlib>
 #include <vector>
 #include <string>
 
-std::vector<double> read_csv(std::string path, std::string column);
+std::vector<std::vector<double>> read_csv(std::string path);
 
-// --- //
-
-void standardize(std::vector<double> &series);
-
-// --- //
+void standardize(std::vector<double> &dat);
 
 class Market
 {
@@ -21,32 +18,18 @@ public:
     Market() {}
     Market(std::vector<std::string> _tickers) {
         tickers.swap(_tickers);
-        std::string cmd = "./python/clean.py ";
-        for(unsigned int i = 0; i < tickers.size(); i++) {
-            cmd += tickers[i];
-            if(i != tickers.size() - 1) cmd += " ";
-        }
-        std::system(cmd.c_str());
-
-        for(std::string &ticker: tickers) {
-            std::vector<double> asset = read_csv("./data/cleaned.csv", ticker);
-            assets.push_back(asset);
-
-            std::vector<double>().swap(asset);
-        }
+        assets = read_csv("./data/cleaned.csv");
     }
     ~Market() {
         std::vector<std::string>().swap(tickers);
         std::vector<std::vector<double>>().swap(assets);
     }
 
-    unsigned int num_of_assets();
-
     std::string ticker(unsigned int i);
+
+    unsigned int num_of_assets();
     std::vector<double> *asset(unsigned int i);
 };
-
-// --- //
 
 class Memory
 {
@@ -61,13 +44,10 @@ public:
         a = action;
         r = expected_reward;
     }
-    ~Memory() {
-        std::vector<double>().swap(s);
-    }
 
-    std::vector<double> *state() { return &s; }
-    unsigned int action() { return a; }
-    double expected_reward() { return r; }
+    std::vector<double> *state();
+    unsigned int action();
+    double expected_reward();
 };
 
 #endif
