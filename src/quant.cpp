@@ -249,7 +249,7 @@ void Quant::run() {
         Market *market = &dataset->at(m);
         std::vector<double> state = sample_state(market, market->asset(MAIN_ASSET)->size() - 1);
         unsigned int action = policy(state);
-        action_count[action] += 1;
+        action_count[action]++;
 
         std::cout << market->ticker(MAIN_ASSET) << ": action=" << action << "\n";
 
