@@ -166,7 +166,7 @@ void Quant::build() {
             }
         }
 
-        std::system(("./python/graph.py " + market->ticker(MAIN_ASSET)).c_str());
+        std::system(("./python/log.py " + market->ticker(MAIN_ASSET)).c_str());
         std::system("rm ./res/log");
 
         sync();
@@ -238,7 +238,7 @@ void Quant::test() {
             std::vector<double>().swap(state);
         }
 
-        std::system(("./python/graph.py " + market->ticker(MAIN_ASSET)).c_str());
+        std::system(("./python/log.py " + market->ticker(MAIN_ASSET)).c_str());
         std::system("rm ./res/log");
     }
 }
