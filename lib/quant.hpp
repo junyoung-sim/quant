@@ -49,7 +49,6 @@ public:
     }
     ~Quant() {
         std::vector<double>().swap(action_space);
-        save();
     }
 
     void init(std::vector<std::vector<unsigned int>> shape);

@@ -168,6 +168,8 @@ void Quant::build() {
     }
 
     std::vector<Memory>().swap(memory);
+
+    save();
 }
 
 void Quant::sgd(Memory &memory, double alpha, double lambda) {
