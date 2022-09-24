@@ -11,9 +11,6 @@
 
 #define MAIN_ASSET 0
 
-void update_log(double mean_loss, double eps, double alpha, unsigned int frame, std::string ticker,
-                unsigned int action, double observed_reward, double expected_reward, double benchmark, double model);
-
 class Quant
 {
 private:
@@ -62,7 +59,6 @@ public:
     void build();
     void sgd(Memory &memory, double alpha, double lambda);
 
-    void test();
     void run();
 
     void save();
