@@ -129,7 +129,7 @@ void Quant::build() {
             loss_sum += pow(expected_reward - action_q_value, 2);
             mean_loss = loss_sum / (frame + 1);
 
-            out << benchmark << " " << model << "\n";
+            out << benchmark << " " << model << " " << action << "\n";
             std::cout << "(loss=" << mean_loss << ", eps=" << eps << ", alpha=" << alpha << ") ";
             std::cout << "frame-" << frame << " @ " << market->ticker(MAIN_ASSET) << ": ";
             std::cout << "action=" << action << " -> " << "observed=" << observed_reward << ", expected=" << expected_reward << ", ";
@@ -234,7 +234,7 @@ void Quant::run() {
         }
 
         out.close();
-        std::system(("./python/plot.py " + market->ticker(MAIN_ASSET)).c_str());
+        std::system(("./python/log.py " + market->ticker(MAIN_ASSET)).c_str());
     }
 
     std::cout << "\naction (0) = " << (double)action_count[0] / dataset->size() * 100 << "%\n";
