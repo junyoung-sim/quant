@@ -13,7 +13,6 @@ std::vector<Market> dataset;
 Quant *quant;
 
 #define VALID_MODE (mode == "build" || mode == "run")
-#define VALID_TICKERS (tickers.size() > 0)
 #define VALID_CHECKPOINT (checkpoint.find("./models/") == 0)
 
 void boot(int argc, char *argv[]) {
@@ -37,7 +36,7 @@ int main(int argc, char *argv[])
 {
     boot(argc, argv);
 
-    if(VALID_MODE && VALID_TICKERS && VALID_CHECKPOINT) {
+    if(VALID_MODE && VALID_CHECKPOINT) {
         std::cout << "Downloading SPY ^TNX IEF GSG\n";
         cmd = "./python/download.py SPY ^TNX IEF GSG";
         std::system(cmd.c_str());
