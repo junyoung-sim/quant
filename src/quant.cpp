@@ -84,7 +84,7 @@ void Quant::build() {
     double alpha_init = 0.00001;
     double alpha_min = 0.00000001;
     double alpha_decay = log(alpha_min) - log(alpha_init);
-    double lambda = 0.05;
+    double lambda = 0.10;
 
     std::vector<Memory> memory;
 
@@ -126,7 +126,7 @@ void Quant::build() {
             benchmark *= 1.00 + diff;
             model *= 1.00 + diff * action_space[action];
 
-            loss_sum += pow(expected_reward - action_q_value, 2);
+            loss_sum += pow(expected_reward - action_q_value, 2) * 0.5;
             mean_loss = loss_sum / (frame + 1);
 
             out << benchmark << " " << model << " " << action << "\n";
@@ -172,30 +172,28 @@ void Quant::sgd(Memory &memory, double alpha, double lambda) {
     for(int l = agent.num_of_layers() - 1; l >= 0; l--) {
         double partial_gradient = 0.00, gradient = 0.00;
         for(unsigned int n = 0; n < agent.layer(l)->out_features(); n++) {
-            if(l == agent.num_of_layers() - 1) {
-                if(n == memory.action())
-                    partial_gradient = -2.00 * (memory.expected_reward() - agent_q[n]);
+            if(!(l == agent.num_of_layers() - 1 && n != memory.action())) {
+                if(l == agent.num_of_layers())
+                    partial_gradient = -(memory.expected_reward() - agent_q[n]);
                 else
-                    partial_gradient = -2.00 * (agent_q[n] - agent_q[n]);
-            }
-            else
-                partial_gradient = agent.layer(l)->node(n)->err() * relu_prime(agent.layer(l)->node(n)->sum());
+                    partial_gradient = agent.layer(l)->node(n)->err() * relu_prime(agent.layer(l)->node(n)->sum());
 
-            double updated_bias = agent.layer(l)->node(n)->bias() - alpha * partial_gradient;
-            agent.layer(l)->node(n)->set_bias(updated_bias);
+                double updated_bias = agent.layer(l)->node(n)->bias() - alpha * partial_gradient;
+                agent.layer(l)->node(n)->set_bias(updated_bias);
 
-            for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
-                if(l == 0)
-                    gradient = partial_gradient * memory.state()->at(i);
-                else {
-                    gradient = partial_gradient * agent.layer(l-1)->node(i)->act();
-                    agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
+                for(unsigned int i = 0; i < agent.layer(l)->in_features(); i++) {
+                    if(l == 0)
+                        gradient = partial_gradient * memory.state()->at(i);
+                    else {
+                        gradient = partial_gradient * agent.layer(l-1)->node(i)->act();
+                        agent.layer(l-1)->node(i)->add_err(partial_gradient * agent.layer(l)->node(n)->weight(i));
+                    }
+
+                    gradient += lambda * agent.layer(l)->node(n)->weight(i);
+
+                    double updated_weight = agent.layer(l)->node(n)->weight(i) - alpha * gradient;
+                    agent.layer(l)->node(n)->set_weight(i, updated_weight);
                 }
-
-                gradient += 2.00 * lambda * agent.layer(l)->node(n)->weight(i);
-
-                double updated_weight = agent.layer(l)->node(n)->weight(i) - alpha * gradient;
-                agent.layer(l)->node(n)->set_weight(i, updated_weight);
             }
         }
     }
