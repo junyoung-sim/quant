@@ -40,7 +40,7 @@ public:
             Market *market = &dataset->at(m);
 
             unsigned int start = look_back - 1;
-            unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
+            unsigned int terminal = market->asset(MAIN_ASSET)->size() - 252;
             num_of_frames += terminal - start + 1;
         }
     }
