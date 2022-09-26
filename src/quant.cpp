@@ -84,7 +84,7 @@ void Quant::build() {
     double alpha_init = 0.00001;
     double alpha_min = 0.00000001;
     double alpha_decay = log(alpha_min) - log(alpha_init);
-    double lambda = 0.10;
+    double lambda = 0.05;
 
     std::vector<Memory> memory;
 
@@ -98,7 +98,7 @@ void Quant::build() {
     for(unsigned int m = 0; m < dataset->size(); m++) {
         Market *market = &dataset->at(m);
         unsigned int start = look_back - 1;
-        unsigned int terminal = market->asset(MAIN_ASSET)->size() - 252;
+        unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
  
         double benchmark = 1.00, model = 1.00;
 
@@ -172,7 +172,8 @@ void Quant::sgd(Memory &memory, double alpha, double lambda) {
     for(int l = agent.num_of_layers() - 1; l >= 0; l--) {
         double partial_gradient = 0.00, gradient = 0.00;
         for(unsigned int n = 0; n < agent.layer(l)->out_features(); n++) {
-            if(!(l == agent.num_of_layers() - 1 && n != memory.action())) {
+            if(l == agent.num_of_layers() - 1 && n != memory.action()) continue;
+            else {
                 if(l == agent.num_of_layers() - 1)
                     partial_gradient = -(memory.expected_reward() - agent_q[n]);
                 else
