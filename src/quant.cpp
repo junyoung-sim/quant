@@ -84,7 +84,7 @@ void Quant::build() {
     double alpha_init = 0.00001;
     double alpha_min = 0.00000001;
     double alpha_decay = log(alpha_min) - log(alpha_init);
-    double lambda = 0.05;
+    double lambda = 0.10;
 
     std::vector<Memory> memory;
 
@@ -126,7 +126,7 @@ void Quant::build() {
             benchmark *= 1.00 + diff;
             model *= 1.00 + diff * action_space[action];
 
-            loss_sum += pow(expected_reward - action_q_value, 2) * 0.5;
+            loss_sum += pow(expected_reward - action_q_value, 2);
             mean_loss = loss_sum / (frame + 1);
 
             out << benchmark << " " << model << " " << action << "\n";
@@ -175,7 +175,7 @@ void Quant::sgd(Memory &memory, double alpha, double lambda) {
             if(l == agent.num_of_layers() - 1 && n != memory.action()) continue;
             else {
                 if(l == agent.num_of_layers() - 1)
-                    partial_gradient = -(memory.expected_reward() - agent_q[n]);
+                    partial_gradient = -2.00 * (memory.expected_reward() - agent_q[n]);
                 else
                     partial_gradient = agent.layer(l)->node(n)->err() * relu_prime(agent.layer(l)->node(n)->sum());
 
