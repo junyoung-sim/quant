@@ -221,13 +221,13 @@ void Quant::run() {
                 double diff = (market->asset(MAIN_ASSET)->at(t+1) - market->asset(MAIN_ASSET)->at(t)) / market->asset(MAIN_ASSET)->at(t);
                 benchmark *= 1.00 + diff;
                 model *= 1.00 + diff * action_space[action];
+
+                out << benchmark << " " << model << " " << action << "\n";
             }
             else {
                 std::cout << market->ticker(MAIN_ASSET) << ": action=" << action << "\n";
                 action_count[action]++;
             }
-
-            out << benchmark << " " << model << " " << action << "\n";
 
             std::vector<double>().swap(state);
         }
