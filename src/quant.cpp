@@ -112,22 +112,16 @@ void Quant::build() {
 
             double diff = (market->asset(MAIN_ASSET)->at(t+1) - market->asset(MAIN_ASSET)->at(t)) / market->asset(MAIN_ASSET)->at(t);
             double observed_reward = (diff >= 0.00 ? action_space[action] : -action_space[action]);
-            double expected_reward = observed_reward;
 
-            if(t != terminal) {
-                std::vector<double> next_state = sample_state(market, t+1);
-                std::vector<double> target_q = target.predict(next_state);
-                expected_reward += gamma * *std::max_element(target_q.begin(), target_q.end());
-
-                std::vector<double>().swap(next_state);
-                std::vector<double>().swap(target_q);
-            }
+            std::vector<double> next_state = sample_state(market, t+1);
+            std::vector<double> target_q = target.predict(next_state);
+            double expected_reward = observed_reward + gamma * *std::max_element(target_q.begin(), target_q.end());
 
             benchmark *= 1.00 + diff;
             model *= 1.00 + diff * action_space[action];
 
             loss_sum += pow(expected_reward - action_q_value, 2);
-            mean_loss = loss_sum / (frame + 1);
+            mean_loss = loss_sum / ++frame;
 
             out << benchmark << " " << model << " " << action << "\n";
             std::cout << "(loss=" << mean_loss << ", eps=" << eps << ", alpha=" << alpha << ") ";
@@ -136,9 +130,10 @@ void Quant::build() {
             std::cout << "benchmark=" << benchmark << ", model=" << model << "\n";
 
             memory.push_back(Memory(state, action, expected_reward));
-            std::vector<double>().swap(state);
 
-            frame++;
+            std::vector<double>().swap(state);
+            std::vector<double>().swap(next_state);
+            std::vector<double>().swap(target_q);
 
             if(memory.size() == memory_capacity) {
                 std::vector<unsigned int> index(memory_capacity, 0);
