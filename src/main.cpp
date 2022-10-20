@@ -12,7 +12,7 @@ std::string checkpoint = "";
 std::vector<Market> dataset;
 Quant *quant;
 
-#define VALID_MODE (mode == "build" || mode == "run")
+#define VALID_MODE (mode == "build" || mode == "test" || mode == "run")
 #define VALID_CHECKPOINT (checkpoint.find("./models/") == 0)
 
 void boot(int argc, char *argv[]) {
@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
         quant = new Quant(dataset, checkpoint);
 
         if(mode == "build") quant->build();
+        else if(mode == "test") quant->test();
         else quant->run();
     }
     else

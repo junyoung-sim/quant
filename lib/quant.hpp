@@ -59,6 +59,7 @@ public:
     void build();
     void sgd(Memory &memory, double alpha, double lambda);
 
+    void test();
     void run();
 
     void save();
