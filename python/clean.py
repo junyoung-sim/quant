@@ -15,5 +15,7 @@ for i in range(1, len(sys.argv)):
     else:
         df = df.merge(asset, on="Date")
 
+print("{} ~ {}\n" .format(df["Date"][0], df["Date"][df["Date"].shape[0] - 1]))
+
 df = df.drop(columns=["Date"])
 df.to_csv("./data/cleaned.csv", index=False)

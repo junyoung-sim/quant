@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
             cmd = "./python/download.py " + ticker + " && ./python/clean.py " + ticker + " SPY ^TNX IEF GSG";
             std::system(cmd.c_str());
 
-            dataset.push_back(Market({ticker, "SPY", "^TNX", "IEF", "GSG"}));
+            dataset.push_back(Market({ticker, "SPY", "^TNX", "IEF", "GSG"}, "./data/cleaned.csv"));
         }
 
         quant = new Quant(dataset, checkpoint);

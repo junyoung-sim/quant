@@ -16,9 +16,9 @@ private:
     std::vector<std::vector<double>> assets;
 public:
     Market() {}
-    Market(std::vector<std::string> _tickers) {
+    Market(std::vector<std::string> _tickers, std::string path) {
         tickers.swap(_tickers);
-        assets = read_csv("./data/cleaned.csv");
+        assets = read_csv(path);
     }
     ~Market() {
         std::vector<std::string>().swap(tickers);

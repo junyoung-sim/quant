@@ -223,7 +223,7 @@ void Quant::test() {
 
         out.close();
         std::system(("./python/log.py " + market->ticker(MAIN_ASSET)).c_str());
-        //std::system(("./python/metric.py " + market->ticker(MAIN_ASSET)).c_str());
+        std::system(("./python/metric.py " + market->ticker(MAIN_ASSET)).c_str());
     }
 }
 

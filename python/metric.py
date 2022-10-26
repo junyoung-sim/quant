@@ -58,9 +58,13 @@ def main():
     benchmark_mdd = maximum_drawdown(benchmark)
     model_mdd = maximum_drawdown(model)
 
-    print("Benchmark: (annualized, stdev, sharpe, mdd) = ({}, {}, {}, {})" .format(benchmark_annualized, benchmark_stdev, benchmark_sharpe, benchmark_mdd))
-    print("Model: (annualized, stdev, sharpe, mdd) = ({}, {}, {}, {})" .format(model_annualized, model_stdev, model_sharpe, model_mdd))
-    print("Model Action Frequency: (long, idle, short) = ({}, {}, {})" .format(model_long_pos, model_idle_pos, model_short_pos))
+    out = open("./res/stats", "a")
+    out.write("{}\n" .format(ticker))
+    out.write("Benchmark (annualized, stdev, sharpe, mdd) = ({}, {}, {}, {})\n" .format(benchmark_annualized, benchmark_stdev, benchmark_sharpe, benchmark_mdd))
+    out.write("DQN Agent (annualized, stdev, sharpe, mdd) = ({}, {}, {}, {})\n" .format(model_annualized, model_stdev, model_sharpe, model_mdd))
+    out.write("DQN Action (long, idle, short) = ({}, {}, {})\n" .format(model_long_pos, model_idle_pos, model_short_pos))
+    out.write("\n")
+    out.close()
 
 if __name__ == "__main__":
     main()
