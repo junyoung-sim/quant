@@ -231,7 +231,7 @@ void Quant::run() {
     unsigned int action_count[3] = {0, 0, 0};
     for(unsigned int m = 0; m < dataset->size(); m++) {
         Market *market = &dataset->at(m);
-        unsigned int start = market->asset(MAIN_ASSET)->size() - 252;
+        unsigned int start = market->asset(MAIN_ASSET)->size() - look_back;
         unsigned int terminal = market->asset(MAIN_ASSET)->size() - 1;
 
         double benchmark = 1.00, model = 1.00;
