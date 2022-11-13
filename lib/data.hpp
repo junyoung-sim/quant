@@ -44,6 +44,9 @@ public:
         a = action;
         r = expected_reward;
     }
+    ~Memory() {
+        std::vector<double>().swap(s);
+    }
 
     std::vector<double> *state();
     unsigned int action();
