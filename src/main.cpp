@@ -37,16 +37,16 @@ int main(int argc, char *argv[])
     boot(argc, argv);
 
     if(VALID_MODE && VALID_CHECKPOINT) {
-        std::cout << "Downloading SPY ^VIX ^TNX IEF GSG\n";
-        cmd = "./python/download.py SPY ^VIX ^TNX IEF GSG";
+        std::cout << "Downloading SPY ^TNX IEF GSG\n";
+        cmd = "./python/download.py SPY ^TNX IEF GSG";
         std::system(cmd.c_str());
 
         for(std::string &ticker: tickers) {
             std::cout << "Downloading " << ticker << "\n";
-            cmd = "./python/download.py " + ticker + " && ./python/clean.py " + ticker + " SPY ^VIX ^TNX IEF GSG";
+            cmd = "./python/download.py " + ticker + " && ./python/clean.py " + ticker + " SPY ^TNX IEF GSG";
             std::system(cmd.c_str());
 
-            dataset.push_back(Market({ticker, "SPY", "^VIX", "^TNX", "IEF", "GSG"}, "./data/cleaned.csv"));
+            dataset.push_back(Market({ticker, "SPY", "^TNX", "IEF", "GSG"}, "./data/cleaned.csv"));
         }
 
         quant = new Quant(dataset, checkpoint);
