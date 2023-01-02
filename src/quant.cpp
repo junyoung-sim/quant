@@ -94,6 +94,8 @@ void Quant::build() {
 
     double loss_sum = 0.00, mean_loss = 0.00;
 
+    std::ofstream summary("./res/summary");
+
     std::shuffle(dataset->begin(), dataset->end(), seed);
     for(unsigned int m = 0; m < dataset->size(); m++) {
         Market *market = &dataset->at(m);
@@ -152,10 +154,14 @@ void Quant::build() {
             }
         }
 
+        summary << benchmark << " " << model << "\n";
+
         out.close();
         std::system(("./python/log.py " + market->ticker(MAIN_ASSET)).c_str());
         sync();
     }
+
+    summary.close();
 
     std::vector<Memory>().swap(memory);
 
