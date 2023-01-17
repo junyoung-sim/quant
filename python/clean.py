@@ -7,6 +7,8 @@ df = None
 for i in range(1, len(sys.argv)):
     ticker = sys.argv[i]
     asset = pd.read_csv("./data/{}.csv" .format(ticker))[["Date", "Adj Close"]]
+
+    asset["Date"] = asset["Date"].str.slice(stop=10)
     asset = asset[asset["Adj Close"].notna()]
     asset = asset.rename(columns={"Adj Close": ticker})
 
