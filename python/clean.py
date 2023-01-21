@@ -6,18 +6,18 @@ import pandas as pd
 df = None
 for i in range(1, len(sys.argv)):
     ticker = sys.argv[i]
-    asset = pd.read_csv("./data/{}.csv" .format(ticker))[["Date", "Adj Close"]]
+    asset = pd.read_csv("./data/{}.csv" .format(ticker))[["date", "adjClose"]]
 
-    asset["Date"] = asset["Date"].str.slice(stop=10)
-    asset = asset[asset["Adj Close"].notna()]
-    asset = asset.rename(columns={"Adj Close": ticker})
+    asset = asset[asset["adjClose"].notna()]
+    asset = asset.rename(columns={"adjClose": ticker})
+    asset = asset.loc[::-1]
 
     if i == 1:
         df = asset
     else:
-        df = df.merge(asset, on="Date")
+        df = df.merge(asset, on="date")
 
-print("{} ~ {}\n" .format(df["Date"][0], df["Date"][df["Date"].shape[0] - 1]))
+print("{} ~ {}\n" .format(df["date"][0], df["date"][df["date"].shape[0] - 1]))
 
-df = df.drop(columns=["Date"])
+df = df.drop(columns=["date"])
 df.to_csv("./data/cleaned.csv", index=False)
