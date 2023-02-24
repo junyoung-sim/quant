@@ -7,6 +7,7 @@
 
 std::vector<std::vector<double>> read_csv(std::string path);
 
+void discretize(std::vector<double> &dat, unsigned int window);
 void standardize(std::vector<double> &dat);
 
 class Market

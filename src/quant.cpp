@@ -41,6 +41,7 @@ std::vector<double> Quant::sample_state(Market *market, unsigned int t) {
     for(unsigned int i = 0; i < market->num_of_assets(); i++) {
         std::vector<double> *asset = market->asset(i);
         std::vector<double> asset_t = {asset->begin() + t + 1 - look_back, asset->begin() + t + 1};
+        discretize(asset_t, discretization);
         standardize(asset_t);
 
         state.insert(state.end(), asset_t.begin(), asset_t.end());

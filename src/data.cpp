@@ -35,6 +35,18 @@ std::vector<std::vector<double>> read_csv(std::string path) {
     return dat;
 }
 
+void discretize(std::vector<double> &dat, unsigned int window) {
+    for(unsigned int t = 0; t <= dat.size() - window; t += window) {
+        double mean = 0.00;
+        for(unsigned i = t; i < t + window; i++)
+            mean += dat[i];
+        mean /= window;
+
+        for(unsigned int i = t; i < t + window; i++)
+            dat[i] = mean;
+    }
+}
+
 void standardize(std::vector<double> &dat) {
     double mean = 0.00;
     for(double &val: dat)

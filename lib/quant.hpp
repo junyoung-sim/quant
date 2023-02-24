@@ -22,6 +22,7 @@ private:
     unsigned int num_of_frames;
 
     unsigned int look_back;
+    unsigned int discretization;
     std::vector<double> action_space;
 
     std::string checkpoint;
@@ -30,6 +31,7 @@ public:
     Quant() {}
     Quant(std::vector<Market> &_dataset, std::string _checkpoint): dataset(&_dataset), checkpoint(_checkpoint) {
         look_back = 100;
+        discretization = 10;
         action_space = std::vector<double>({-1.0, 0.0, 1.0});
 
         init({{500,450},{450,400},{400,350},{350,300},{300,250},{250,3}});
