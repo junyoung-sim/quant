@@ -259,6 +259,11 @@ void Quant::run() {
             else {
                 std::cout << market->ticker(MAIN_ASSET) << ": action=" << action << "\n";
                 action_count[action]++;
+
+                /*std::ofstream s("./res/state");
+                for(unsigned int i = 0; i < state.size(); i++)
+                    s << state[i] << "\n";
+                s.close();*/
             }
 
             std::vector<double>().swap(state);

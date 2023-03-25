@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
         for(std::string &ticker: tickers) {
             std::cout << "Downloading " << ticker << "\n";
             cmd = "./python/download.py " + ticker + " && ./python/clean.py " + ticker + " SPY IEF EUR=X GSG";
+            //cmd = "./python/clean.py " + ticker + " SPY IEF EUR=X GSG";
             std::system(cmd.c_str());
 
             dataset.push_back(Market({ticker, "SPY", "IEF", "EUR=X", "GSG"}, "./data/cleaned.csv"));
