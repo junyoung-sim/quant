@@ -18,7 +18,7 @@ if __name__ == "__main__":
     for ticker in sys.argv[1:]:
         url = "https://financialmodelingprep.com/api/v3/historical-price-full"
         if ticker.endswith("=X"):
-            url += "/forex/{}?apikey={}" .format("USD" + ticker[:-2], apikey)
+            url += "/{}?apikey={}" .format("USD" + ticker[:-2], apikey)
         else:
             url += "/{}?apikey={}" .format(ticker, apikey)
 
