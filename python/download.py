@@ -18,9 +18,9 @@ if __name__ == "__main__":
     for ticker in sys.argv[1:]:
         url = "https://financialmodelingprep.com/api/v3/historical-price-full"
         if ticker.endswith("=X"):
-            url += "/{}?apikey={}" .format("USD" + ticker[:-2], apikey)
+            url += "/{}?apikey={}&from=2000-01-01" .format("USD" + ticker[:-2], apikey)
         else:
-            url += "/{}?apikey={}" .format(ticker, apikey)
+            url += "/{}?apikey={}&from=2000-01-01" .format(ticker, apikey)
 
         json_data = get_jsonparsed_data(url)
         out = open("./data/{}.csv" .format(ticker), "w")
