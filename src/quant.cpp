@@ -108,7 +108,7 @@ void Quant::build() {
         std::ofstream out("./res/log");
 
         for(unsigned int t = start; t <= terminal; t++) {
-            eps = std::max((eps_min - eps_init) / (unsigned int)(num_of_frames * 0.10) * frame + eps_init, eps_min);
+            eps = std::max((eps_min - eps_init) / memory_capacity * frame + eps_init, eps_min);
             std::vector<double> state = sample_state(market, t);
             unsigned int action = eps_greedy_policy(state, eps);
             double action_q_value = agent.layer(agent.num_of_layers() - 1)->node(action)->sum();
