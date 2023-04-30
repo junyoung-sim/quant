@@ -9,10 +9,15 @@ Research involved in the implementation of this trading model is published in th
 ## Repository Information
 
 ./data (historical data storage; included in .gitignore)
+
 ./lib (C++ header files; data structures and processing, deep neural network, trading model agent)
+
 ./models (trading model paramter checkpoint; raw text file)
+
 ./python (python modules used for data processing and analysis)
+
 ./res (all build/test/run outputs are saved here)
+
 ./src (C++ source files; main, data structures and processing, deep neural network, trading model agent, checkpoint management)
 
 ## Usage
@@ -35,4 +40,4 @@ Research involved in the implementation of this trading model is published in th
 ./exec run <list of tickers separated by spaces> ./models/<checkpoint name>
 ~~~
 
-*** All content in the trading model may be used for individual research purposes at his or her own risk, and the author and contributor(s) to the work related to this repository do not hold any responsibility for such risks. ***
+***All content in the trading model may be used for individual research purposes at his or her own risk, and the author and contributor(s) to the work related to this repository do not hold any responsibility for such risks.***
