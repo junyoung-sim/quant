@@ -76,6 +76,7 @@ void NeuralNetwork::add_layer(unsigned int in, unsigned int out) {
 }
 
 void NeuralNetwork::init(std::default_random_engine &seed) {
+    // He-initialization (sampling random weights from a normal distribution)
     std::normal_distribution<double> std_normal(0.0, 1.0);
     for(unsigned int l = 0; l < layers.size(); l++) {
         for(unsigned int n = 0; n < layers[l].out_features(); n++) {
@@ -90,6 +91,7 @@ unsigned int NeuralNetwork::num_of_layers() {
 }
 
 Layer *NeuralNetwork::layer(unsigned int index) {
+    // pointer access to individual layers for optimization algorithms coded elsewhere
     return &layers[index];
 }
 
@@ -97,19 +99,19 @@ std::vector<double> NeuralNetwork::predict(std::vector<double> &x) {
     std::vector<double> yhat;
     for(unsigned int l = 0; l < layers.size(); l++) {
         for(unsigned int n = 0; n < layers[l].out_features(); n++) {
-            double matmul = 0.00;
+            double dot = 0.00;
             for(unsigned int i = 0; i < layers[l].in_features(); i++) {
                 if(l == 0)
-                   matmul += x[i] * layers[l].node(n)->weight(i);
+                   dot += x[i] * layers[l].node(n)->weight(i);
                 else
-                   matmul += layers[l-1].node(i)->act() * layers[l].node(n)->weight(i);
+                   dot += layers[l-1].node(i)->act() * layers[l].node(n)->weight(i);
             }
 
             layers[l].node(n)->init();
-            layers[l].node(n)->set_sum(matmul + layers[l].node(n)->bias());
+            layers[l].node(n)->set_sum(dot + layers[l].node(n)->bias());
 
             if(l == layers.size() - 1)
-                yhat.push_back(layers[l].node(n)->sum());
+                yhat.push_back(layers[l].node(n)->sum()); // q-values are linear estimations in DQNs
             else
                 layers[l].node(n)->set_act(relu(layers[l].node(n)->sum()));
         }

@@ -2,14 +2,17 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <fstream>
 #include <map>
 
-#include "../lib/data.hpp"
+#include "../lib/quant.hpp"
 
 std::string mode; // build, test, run
 std::string checkpoint; // model path (./models/*)
 
-std::map<std::string, std::vector<std::vector<double>>> environment; // (ticker, historical data)
+std::vector<std::string> tickers; // tickers of interest
+std::vector<std::string> indicators = {"SPY", "IEF", "EUR=X", "GSG"}; // stock bond currency commodities
+Environment env; // (ticker, historical data)
 
 /*
     ./exec mode <tickers> checkpoint
@@ -20,8 +23,6 @@ void boot(int argc, char *argv[]) {
     checkpoint = argv[argc-1];
 
     // read ticker list from command-line
-    std::vector<std::string> tickers;
-    std::vector<std::string> indicators = {"SPY", "IEF", "EUR=X", "GSG"};
     for(unsigned int i = 2; i < argc-1; i++)
         tickers.push_back(argv[i]);
     
@@ -31,15 +32,17 @@ void boot(int argc, char *argv[]) {
     download(indicators);
 
     // create environment for each ticker
-    for(std::string &x: tickers)
-        environment[x] = historical_data(x, indicators);
+    for(std::string &ticker: tickers)
+        env[ticker] = historical_data(ticker, indicators);
 }
 
 int main(int argc, char *argv[])
 {
     boot(argc, argv);
 
-    
+    Quant quant(checkpoint);
+
+    quant.build(tickers, env);
 
     return 0;
 }
