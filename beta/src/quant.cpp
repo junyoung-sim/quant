@@ -105,7 +105,7 @@ void Quant::build(std::vector<std::string> &tickers, Environment &env) {
         unsigned int start = look_back - 1; // starting index
         unsigned int terminal = env[ticker][TICKER].size() - 2; // terminal index
 
-        std::ofstream out("./res/build");
+        std::ofstream out("./res/log");
         double benchmark = 1.00, model = 1.00;
 
         for(unsigned int t = start; t <= terminal; t++) {
@@ -131,8 +131,8 @@ void Quant::build(std::vector<std::string> &tickers, Environment &env) {
             model *= 1.00 + diff * action_space[action];
             out << benchmark << " " << model << " " << action << "\n";
 
-            rss += pow(optimal - q, 2);
-            mse = rss / ++experiences; // update model cost
+            rss += pow(optimal - q, 2); // update model cost
+            mse = rss / ++experiences;
 
             std::cout << std::fixed;
             std::cout.precision(15);
@@ -161,7 +161,7 @@ void Quant::build(std::vector<std::string> &tickers, Environment &env) {
         } sync(); // synchronize after each ticker for stability
 
         out.close();
-        std::system(("./python/build.py " + ticker).c_str()); // output training result on each ticker
+        std::system(("./python/log.py " + ticker).c_str()); // output training result on each ticker
     
     } save();
 }
@@ -199,9 +199,16 @@ void Quant::sgd(Memory &memory, double alpha, double lambda) {
     }
 }
 
+void Quant::test(std::vector<std::string> &tickers, Environment &env) {
+    for(std::string &ticker: tickers) {
+        unsigned int start = look_back - 1;
+        unsigned int terminal = env[ticker][TICKER].size() - 2;
 
+        for(unsigned int t = start; t <= terminal; t++) {
 
-
+        }
+    }
+}
 
 void Quant::save() {
     std::ofstream out(checkpoint);

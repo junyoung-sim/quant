@@ -47,7 +47,7 @@ public:
         action_space = std::vector<double>({-1.0, 0.0, 1.0}); // short, idle, long
 
         init({{500,450},{450,400},{400,350},{350,300},{300,250},{250,3}});
-        //load();
+        load();
     }
     
     void init(std::vector<std::vector<unsigned int>> shape);
@@ -60,6 +60,8 @@ public:
 
     void build(std::vector<std::string> &tickers, Environment &env);
     void sgd(Memory &memory, double alpha, double lambda);
+
+    void test(std::vector<std::string> &tickers, Environment &env);
 
     void save();
     void load();
