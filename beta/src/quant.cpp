@@ -62,7 +62,7 @@ unsigned int Quant::epsilon_greedy(std::vector<double> &state, double eps) {
     unsigned int action = greedy(state);
     double explore = (double)rand() / RAND_MAX;
     if(explore < eps) {
-        action = rand() % action_space.size(); // exploring a random action
+        action = rand() % action_space.size(); // explore a random action
         std::cout << "(E) ";
     }
     else
@@ -117,7 +117,7 @@ void Quant::build(std::vector<std::string> &tickers, Environment &env) {
             unsigned int action = epsilon_greedy(state, eps); // select action
             double q = agent.layer(agent.num_of_layers() - 1)->node(action)->sum(); // predicted q-value
 
-            // observe discrete reward from p&l
+            // observe discrete reward from daily p&l
             double diff = (env[ticker][TICKER][t+1] - env[ticker][TICKER][t]) / env[ticker][TICKER][t];
             double observed_reward = (diff >= 0.00 ? action_space[action] : -action_space[action]);
 
@@ -161,7 +161,7 @@ void Quant::build(std::vector<std::string> &tickers, Environment &env) {
         } sync(); // synchronize after each ticker for stability
 
         out.close();
-        std::system(("./python/log.py " + ticker).c_str()); // output training result on each ticker
+        std::system(("./python/log.py " + ticker).c_str()); // output historical return-on-investment
     
     } save();
 }
@@ -204,10 +204,33 @@ void Quant::test(std::vector<std::string> &tickers, Environment &env) {
         unsigned int start = look_back - 1;
         unsigned int terminal = env[ticker][TICKER].size() - 2;
 
-        for(unsigned int t = start; t <= terminal; t++) {
+        // track benchmark and model's historical return-on-investment
+        std::ofstream out("./res/log");
+        double benchmark = 1.00, model = 1.00;
 
+        for(unsigned int t = start; t <= terminal; t++) {
+            std::vector<double> state = sample_state(env[ticker], t);
+            unsigned int action = greedy(state); // test the model's greedy policy
+
+            // observe daily p&l of benchmark and model
+            double diff = (env[ticker][TICKER][t+1] - env[ticker][TICKER][t]) / env[ticker][TICKER][t];
+            benchmark *= 1.00 + diff;
+            model *= 1.00 + diff * action_space[action];
+            out << benchmark << " " << model << " " << action << "\n";
+
+            // display progress
+            std::cout << std::fixed;
+            std::cout.precision(15);
+            std::cout << "T=" << t << " @ " << ticker << " ACTION=" << action << " ";
+            std::cout << "DIFF=" << diff << " BASE=" << benchmark << " MOD=" << model << "\n";
         }
+
+        out.close();
+        std::system(("./python/log.py " + ticker).c_str()); // output historical return-on-investment
+        //std::system(("./python/stats.py analyze " + ticker).c_str()); // analyze benchmark and model performance
     }
+
+    //std::system(("./python/stats.py summary").c_str()); // analyze summary
 }
 
 void Quant::save() {

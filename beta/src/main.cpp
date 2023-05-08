@@ -42,7 +42,10 @@ int main(int argc, char *argv[])
 
     Quant quant(checkpoint);
 
-    quant.build(tickers, env);
+    if(mode == "build")
+        quant.build(tickers, env);
+    else if(mode == "test")
+        quant.test(tickers, env);
 
     return 0;
 }
