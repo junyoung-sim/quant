@@ -9,6 +9,7 @@ Research involved in the implementation of this trading model is published in th
 ## Performance Report
 
 **Build**: May 7, 2023 (S&P 500 Top 100)
+
 **Test**: May 9, 2023 (S&P Top 100)
 
 | METRIC | BENCHMARK | MODEL  |
