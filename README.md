@@ -14,10 +14,12 @@ Research involved in the implementation of this trading model is published in th
 
 | METRIC | BENCHMARK | MODEL  |
 |--------|-----------|--------|
-| E(R)   | 0.1263    | 0.4639 | Annualized Return
-| SD(R)  | 0.3097    | 0.4947 | Return Standard Deviation
-| SR     | 0.4078    | 0.9377 | Sharpe Ratio: E(R)/SD(R)
-| MDD    | 0.5903    | 0.4036 | Maximum Drawdown
+| E(R)   | 0.1263    | 0.4639 |
+| SD(R)  | 0.3097    | 0.4947 |
+| SR     | 0.4078    | 0.9377 |
+| MDD    | 0.5903    | 0.4036 |
+
+E(R) = annualized return, SD(R) = return standard deviation, SR = sharpe ratio, MDD = maximum drawdown
 
 ***Refer to ./res for full build and test results along with up-to-date model outputs.***
 
@@ -44,7 +46,7 @@ Test Result Example (AAPL; tested on May 9, 2023)
 ./exec run <list of tickers separated by spaces> ./models/checkpoint
 ~~~
 
-Up-to-date Output Example (AAPL)
+Up-To-Date Output (AAPL)
 
 ![alt text](https://github.com/junyoung-sim/quant/blob/master/res/AAPL.png?raw=true)
 
