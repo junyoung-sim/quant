@@ -2,62 +2,56 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <fstream>
+#include <map>
 
 #include "../lib/quant.hpp"
 
-std::string cmd = "";
-std::string mode = "";
-std::vector<std::string> tickers;
-std::string checkpoint = "";
-std::vector<Market> dataset;
-Quant *quant;
+std::string mode; // build, test, run
+std::string checkpoint; // model path (./models/*)
 
-#define VALID_MODE (mode == "build" || mode == "test" || mode == "run")
-#define VALID_CHECKPOINT (checkpoint.find("./models/") == 0)
+std::vector<std::string> tickers; // tickers of interest
+std::vector<std::string> indicators = {"SPY", "IEF", "EUR=X", "GSG"}; // stock bond currency commodities
+Environment env; // (ticker, historical data)
+
+/*
+    ./exec mode <tickers> checkpoint
+*/
 
 void boot(int argc, char *argv[]) {
-    unsigned int arg = 1;
-    mode = argv[arg++];
-    while(arg <= argc - 2)
-        tickers.push_back(argv[arg++]);
-    if(arg == argc - 1)
-        checkpoint = argv[arg];
-}
+    mode = argv[1];
+    checkpoint = argv[argc-1];
 
-int terminate() {
-    std::vector<std::string>().swap(tickers);
-    std::vector<Market>().swap(dataset);
-    delete quant;
+    // read ticker list from command-line
+    for(unsigned int i = 2; i < argc-1; i++)
+        tickers.push_back(argv[i]);
+    
+    // download historical data
+    std::cout << "\nDownloading... (this may take a while)\n";
+    download(tickers);
+    download(indicators);
 
-    return 0;
+    // create environment for each ticker
+    for(std::string &ticker: tickers)
+        env[ticker] = historical_data(ticker, indicators);
+
+    std::cout << "\n";
 }
 
 int main(int argc, char *argv[])
 {
     boot(argc, argv);
 
-    if(VALID_MODE && VALID_CHECKPOINT) {
-        std::cout << "Downloading SPY IEF EUR=X GSG\n";
-        cmd = "./python/download.py SPY IEF EUR=X GSG";
-        std::system(cmd.c_str());
+    Quant quant(checkpoint);
 
-        for(std::string &ticker: tickers) {
-            std::cout << "Downloading " << ticker << "\n";
-            cmd = "./python/download.py " + ticker + " && ./python/clean.py " + ticker + " SPY IEF EUR=X GSG";
-            //cmd = "./python/clean.py " + ticker + " SPY IEF EUR=X GSG";
-            std::system(cmd.c_str());
-
-            dataset.push_back(Market({ticker, "SPY", "IEF", "EUR=X", "GSG"}, "./data/cleaned.csv"));
-        }
-
-        quant = new Quant(dataset, checkpoint);
-
-        if(mode == "build") quant->build();
-        else if(mode == "test") quant->test();
-        else quant->run();
-    }
+    if(mode == "build")
+        quant.build(tickers, env);
+    else if(mode == "test")
+        quant.test(tickers, env);
+    else if(mode == "run")
+        quant.run(tickers, env);
     else
-        std::cout << "Boot-time failure!\n";
+        std::cout << "Invalid mode given.\n";
 
-    terminate();
+    return 0;
 }

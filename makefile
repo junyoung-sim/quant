@@ -1,8 +1,8 @@
 COM=g++
 VER=-std=c++2a
 
-output: main.o data.o net.o quant.o checkpoint.o
-	$(COM) $(VER) main.o data.o net.o quant.o checkpoint.o -o exec
+output: main.o data.o net.o quant.o
+	$(COM) $(VER) main.o data.o net.o quant.o -o exec
 	rm *.o
 
 main.o: ./src/main.cpp
@@ -16,6 +16,3 @@ net.o: ./src/net.cpp
 
 quant.o: ./src/quant.cpp
 	$(COM) $(VER) -c ./src/quant.cpp
-
-checkpoint.o: ./src/checkpoint.cpp
-	$(COM) $(VER) -c ./src/checkpoint.cpp

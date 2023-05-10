@@ -3,9 +3,11 @@
 #include <string>
 #include <fstream>
 #include <cmath>
-#include <iostream>
 
-#include "../lib/data.hpp"
+void download(std::vector<std::string> &tickers) {
+    for(std::string &x: tickers)
+        std::system(("./python/download.py " + x).c_str());
+}
 
 std::vector<std::vector<double>> read_csv(std::string path) {
     std::vector<std::vector<double>> dat;
@@ -35,54 +37,50 @@ std::vector<std::vector<double>> read_csv(std::string path) {
     return dat;
 }
 
-void discretize(std::vector<double> &dat, unsigned int window) {
-    for(unsigned int t = 0; t <= dat.size() - window; t += window) {
-        double mean = 0.00;
-        for(unsigned i = t; i < t + window; i++)
-            mean += dat[i];
-        mean /= window;
+std::vector<std::vector<double>> historical_data(std::string ticker, std::vector<std::string> &indicators) {
+    // clean historical data using pandas: columns={ticker, indicators}
+    std::string clean = "./python/clean.py " + ticker + " ";
+    for(unsigned int i = 0; i < indicators.size(); i++) {
+        clean += indicators[i];
+        if(i < indicators.size() - 1)
+            clean += " ";
+    }
+    std::system(clean.c_str());
 
+    // each row of 2d vec has the historical data of the ticker and the indicators
+    return read_csv("./data/cleaned.csv");
+}
+
+double mean(std::vector<double> &dat) {
+    double sum = 0.00;
+    for(double &x: dat)
+        sum += x;
+    return sum / dat.size();
+}
+
+double stdev(std::vector<double> &dat) {
+    double s = 0.00;
+    double m = mean(dat);
+    for(double &x: dat)
+        s += pow(x - m, 2);
+    s /= dat.size();
+    s = sqrt(s);
+    return s;
+}
+
+void piecewise_aggregate_approximation(std::vector<double> &dat, unsigned int window) {
+    // discretizing time series by averaging equally split windows
+    for(unsigned int t = 0; t <= dat.size() - window; t += window) {
+        std::vector<double> piece = {dat.begin() + t, dat.begin() + t + window};
+        double approx = mean(piece);
         for(unsigned int i = t; i < t + window; i++)
-            dat[i] = mean;
+            dat[i] = approx;
     }
 }
 
 void standardize(std::vector<double> &dat) {
-    double mean = 0.00;
-    for(double &val: dat)
-        mean += val;
-    mean /= dat.size();
-
-    double std_dev = 0.00;
-    for(double &val: dat)
-        std_dev += pow(val - mean, 2);
-    std_dev /= dat.size();
-    std_dev = sqrt(std_dev);
-
-    for(double &val: dat)
-        val = (val - mean) / std_dev;
-}
-
-std::string Market::ticker(unsigned int i) {
-    return tickers[i];
-}
-
-unsigned int Market::num_of_assets() {
-    return assets.size();
-}
-
-std::vector<double> *Market::asset(unsigned int i) {
-    return &assets[i];
-}
-
-std::vector<double> *Memory::state() {
-    return &s;
-}
-
-unsigned int Memory::action() {
-    return a;
-}
-
-double Memory::expected_reward() {
-    return r;
+    double m = mean(dat);
+    double s = stdev(dat);
+    for(double &x: dat)
+        x = (x - m) / s;
 }

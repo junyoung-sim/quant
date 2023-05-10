@@ -1,15 +1,29 @@
 #ifndef __QUANT_HPP_
 #define __QUANT_HPP_
 
-#include <cstdlib>
 #include <vector>
 #include <string>
 #include <random>
+#include <map>
 
 #include "../lib/data.hpp"
 #include "../lib/net.hpp"
 
-#define MAIN_ASSET 0
+#define TICKER 0
+
+typedef std::map<std::string, std::vector<std::vector<double>>> Environment; // (ticker, historical data)
+
+struct Memory {
+    std::vector<double> state;
+    unsigned int action;
+    double optimal;
+
+    Memory(std::vector<double> &s, unsigned int a, double opt) {
+        state.swap(s);
+        action = a;
+        optimal = opt;
+    }
+};
 
 class Quant
 {
@@ -18,51 +32,37 @@ private:
     NeuralNetwork target;
     std::default_random_engine seed;
 
-    std::vector<Market> *dataset;
-    unsigned int num_of_frames;
+    unsigned int look_back; // number of market days observed in state
+    unsigned int paa_window; // piecewise aggregate approximation window
 
-    unsigned int look_back;
-    unsigned int discretization;
     std::vector<double> action_space;
 
     std::string checkpoint;
 
 public:
-    Quant() {}
-    Quant(std::vector<Market> &_dataset, std::string _checkpoint): dataset(&_dataset), checkpoint(_checkpoint) {
-        look_back = 100;
-        discretization = 5;
-        action_space = std::vector<double>({-1.0, 0.0, 1.0});
+    Quant(std::string path): checkpoint(path) {
+        look_back = 100; // 100 market days
+        paa_window = 5; // 5 market days (weekly discretization)
+
+        action_space = std::vector<double>({-1.0, 0.0, 1.0}); // short, idle, long
 
         init({{500,450},{450,400},{400,350},{350,300},{300,250},{250,3}});
         load();
-
-        num_of_frames = 0;
-        for(unsigned int m = 0; m < dataset->size(); m++) {
-            Market *market = &dataset->at(m);
-
-            unsigned int start = look_back - 1;
-            unsigned int terminal = market->asset(MAIN_ASSET)->size() - 2;
-            num_of_frames += terminal - start + 1;
-        }
     }
-    ~Quant() {
-        std::vector<double>().swap(action_space);
-    }
-
+    
     void init(std::vector<std::vector<unsigned int>> shape);
     void sync();
 
-    std::vector<double> sample_state(Market *market, unsigned int t);
+    std::vector<double> sample_state(std::vector<std::vector<double>> &dat, unsigned int t);
 
-    unsigned int policy(std::vector<double> &state);
-    unsigned int eps_greedy_policy(std::vector<double> &state, double eps);
+    unsigned int greedy(std::vector<double> &state);
+    unsigned int epsilon_greedy(std::vector<double> &state, double eps);
 
-    void build();
+    void build(std::vector<std::string> &tickers, Environment &env);
     void sgd(Memory &memory, double alpha, double lambda);
 
-    void test();
-    void run();
+    void test(std::vector<std::string> &tickers, Environment &env);
+    void run(std::vector<std::string> &tickers, Environment &env);
 
     void save();
     void load();

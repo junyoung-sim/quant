@@ -1,7 +1,6 @@
 #ifndef __NET_HPP_
 #define __NET_HPP_
 
-#include <cstdlib>
 #include <vector>
 #include <string>
 #include <random>
@@ -23,9 +22,6 @@ public:
         init();
         b = 0.00;
         w = std::vector<double>(in, 0.00);
-    }
-    ~Node() {
-        std::vector<double>().swap(w);
     }
 
     double bias();
@@ -53,9 +49,6 @@ public:
     Layer(unsigned int _in, unsigned int _out): in(_in), out(_out) {
         n = std::vector<Node>(out, Node(in));
     }
-    ~Layer() {
-        std::vector<Node>().swap(n);
-    }
 
     unsigned int in_features();
     unsigned int out_features();
@@ -69,9 +62,6 @@ private:
     std::vector<Layer> layers;
 public:
     NeuralNetwork() {}
-    ~NeuralNetwork() {
-        std::vector<Layer>().swap(layers);
-    }
 
     void add_layer(unsigned int in, unsigned int out);
     void init(std::default_random_engine &seed);
