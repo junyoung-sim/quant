@@ -6,19 +6,16 @@ The trading model open-sourced in this repository observes a PAA-discretized mul
 
 Research involved in the implementation of this trading model is published in the Journal of Student Research as *Generalized Deep Reinforcement Learning for Trading* (https://doi.org/10.47611/jsrhs.v12i1.4316). Empirical results shown in this article is based on training the trading model on the top 50 holdings of the S&P 500 and testing it on the top 100 holdings of the S&P 500 during the time frame between 2006 and 2022 with no PAA-discretization applied to the multivariate state space. Up-to-date code, model checkpoint(s), and outputs in this repository may show results different from (better than) those reported in the original research.
 
-## Performance 
+## Performance Report
 
-**Build: May 7, 2023 (S&P 500 Top 100)**
-**Test: May 9, 2023 (S&P Top 100)**
+**Build**: May 7, 2023 (S&P 500 Top 100)
+**Test**: May 9, 2023 (S&P Top 100)
 
 | METRIC | BENCHMARK | MODEL  |
-|        |           |        |
+|--------|-----------|--------|
 | E(R)   | 0.1263    | 0.4639 | Annualized Return
-|        |           |        |
 | SD(R)  | 0.3097    | 0.4947 | Return Standard Deviation
-|        |           |        |
 | SR     | 0.4078    | 0.9377 | Sharpe Ratio: E(R)/SD(R)
-|        |           |        |
 | MDD    | 0.5903    | 0.4036 | Maximum Drawdown
 
 ***Refer to ./res for full build and test results along with up-to-date model outputs.***
@@ -38,6 +35,7 @@ Research involved in the implementation of this trading model is published in th
 ~~~
 
 Test Result Example (AAPL; tested on May 9, 2023)
+
 ![alt text](https://github.com/junyoung-sim/quant/blob/master/res/test/AAPL.png?raw=true)
 
 **Run**:
@@ -46,6 +44,7 @@ Test Result Example (AAPL; tested on May 9, 2023)
 ~~~
 
 Up-to-date Output Example (AAPL)
+
 ![alt text](https://github.com/junyoung-sim/quant/blob/master/res/AAPL.png?raw=true)
 
 ***All content in this repository may be used for individual purposes at his or her own risk. The author and contributor(s) to the work related to this repository do not hold any responsibility for such risks.***
