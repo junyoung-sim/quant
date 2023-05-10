@@ -12,7 +12,7 @@ Research involved in the implementation of this trading model is published in th
 
 **Test**: May 9, 2023 (S&P Top 100)
 
-| METRIC | BENCHMARK | MODEL  |
+| Metric | Benchmark | Model  |
 |--------|-----------|--------|
 | E(R)   | 0.1263    | 0.4639 |
 | SD(R)  | 0.3097    | 0.4947 |
