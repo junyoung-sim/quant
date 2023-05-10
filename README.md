@@ -8,9 +8,9 @@ Research involved in the implementation of this trading model is published in th
 
 ## Performance Report
 
-**Build**: May 7, 2023 (S&P 500 Top 100)
+**Build**: Jul 21, 2006 - May 7, 2023 (S&P 500 Top 100)
 
-**Test**: May 9, 2023 (S&P 500 Top 100)
+**Test**: Jul 21, 2006 - May 9, 2023 (S&P 500 Top 100)
 
 | Metric | Benchmark | Model  |
 |--------|-----------|--------|
@@ -37,7 +37,7 @@ E(R) = annualized return, SD(R) = return standard deviation, SR = sharpe ratio, 
 ./exec test <list of tickers separated by spaces> ./models/checkpoint
 ~~~
 
-Test Result Example (AAPL; tested on May 9, 2023)
+Test Result Output (AAPL)
 
 ![alt text](https://github.com/junyoung-sim/quant/blob/master/res/test/AAPL.png?raw=true)
 
@@ -49,5 +49,3 @@ Test Result Example (AAPL; tested on May 9, 2023)
 Up-To-Date Output (AAPL)
 
 ![alt text](https://github.com/junyoung-sim/quant/blob/master/res/AAPL.png?raw=true)
-
-***All content in this repository may be used for individual purposes at his or her own risk. The author and contributor(s) to the work related to this repository do not hold any responsibility for such risks.***
