@@ -12,9 +12,13 @@ Research involved in the implementation of this trading model is published in th
 **Test: May 9, 2023 (S&P Top 100)**
 
 | METRIC | BENCHMARK | MODEL  |
+|        |           |        |
 | E(R)   | 0.1263    | 0.4639 | Annualized Return
+|        |           |        |
 | SD(R)  | 0.3097    | 0.4947 | Return Standard Deviation
+|        |           |        |
 | SR     | 0.4078    | 0.9377 | Sharpe Ratio: E(R)/SD(R)
+|        |           |        |
 | MDD    | 0.5903    | 0.4036 | Maximum Drawdown
 
 ***Refer to ./res for full build and test results along with up-to-date model outputs.***
@@ -25,13 +29,12 @@ Research involved in the implementation of this trading model is published in th
 
 **Build**:
 ~~~
-./exec build <list of tickers separated by spaces> ./models/<checkpoint name>
-./python/summary.py (optional; will output ./res/summary.png that shows change in cumulative mean return-on-investment)
+./exec build <list of tickers separated by spaces> ./models/checkpoint
 ~~~
 
 **Test**:
 ~~~
-./exec test <list of tickers separated by spaces> ./models/<checkpoint name>
+./exec test <list of tickers separated by spaces> ./models/checkpoint
 ~~~
 
 Test Result Example (AAPL; tested on May 9, 2023)
@@ -39,7 +42,7 @@ Test Result Example (AAPL; tested on May 9, 2023)
 
 **Run**:
 ~~~
-./exec run <list of tickers separated by spaces> ./models/<checkpoint name>
+./exec run <list of tickers separated by spaces> ./models/checkpoint
 ~~~
 
 Up-to-date Output Example (AAPL)
