@@ -11,13 +11,17 @@ Research involved in the implementation of this trading model is published in th
 **Build: May 7, 2023 (S&P 500 Top 100)**
 **Test: May 9, 2023 (S&P Top 100)**
 
-------------------------------------------------------------
-METRIC                               BENCHMARK    MODEL
-------------------------------------------------------------
-E(R) (Annualized Return)             0.1263       0.4639
-SD(R) (Return Standard Deviation)    0.3097       0.4947 
-SR (Sharpe Ratio)                    0.4078       0.9377 
-MDD (Maximum Drawdown)               0.5903       0.4036 
+|--------|-----------|--------|
+| METRIC | BENCHMARK | MODEL  |
+|--------|-----------|--------|
+| E(R)   | 0.1263    | 0.4639 | Annualized Return
+|--------|-----------|--------|
+| SD(R)  | 0.3097    | 0.4947 | Return Standard Deviation
+|--------|-----------|--------| 
+| SR     | 0.4078    | 0.9377 | Sharpe Ratio: E(R)/SD(R)
+|--------|-----------|--------| 
+| MDD    | 0.5903    | 0.4036 | Maximum Drawdown
+|--------|-----------|--------|
 
 ***Refer to ./res for full build and test results along with up-to-date model outputs.***
 
