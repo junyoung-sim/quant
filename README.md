@@ -50,4 +50,4 @@ Up-To-Date Output (AAPL)
 
 ![alt text](https://github.com/junyoung-sim/quant/blob/master/res/AAPL.png?raw=true)
 
-***All content in this repository may be used for individual purposes. The author and contributor(s) related to this repository do not only any responsibility for the risks involved in such purposes.***
+***All content in this repository may be used for individual purposes. The author and contributor(s) of this repository do not only any responsibility for the risks involved in such purposes.***
