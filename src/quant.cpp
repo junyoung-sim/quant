@@ -227,13 +227,15 @@ void Quant::test(std::vector<std::string> &tickers, Environment &env) {
 
         out.close();
         std::system(("./python/log.py " + ticker).c_str()); // output historical return-on-investment
-        std::system(("./python/stats.py push " + ticker).c_str()); // analyze benchmark and model performance
+        std::system(("./python/stats.py push " + ticker).c_str()); // analyze historical performance
     }
 
-    std::system("./python/stats.py summary"); // analyze summary
+    std::system("./python/stats.py summary"); // summarize historical performance
 }
 
 void Quant::run(std::vector<std::string> &tickers, Environment &env) {
+    std::vector<int> action_count = {0, 0, 0};
+    double benchmark_daily = 0.00, model_daily = 0.00;
     for(std::string &ticker: tickers) {
         unsigned int start = env[ticker][TICKER].size() - 252;
         unsigned int terminal = env[ticker][TICKER].size() - 1;
@@ -245,24 +247,41 @@ void Quant::run(std::vector<std::string> &tickers, Environment &env) {
             std::vector<double> state = sample_state(env[ticker], t);
             unsigned int action = greedy(state);
 
-            if(t == terminal) {
+            if(t != terminal) {
+                double diff = (env[ticker][TICKER][t+1] - env[ticker][TICKER][t]) / env[ticker][TICKER][t];
+                benchmark *= 1.00 + diff;
+                model *= 1.00 + diff * action_space[action];
+                out << benchmark << " " << model << " " << action << "\n";
+
+                if(t == terminal - 1) {
+                    benchmark_daily += diff;
+                    model_daily += diff * action_space[action];
+                }
+            }
+            else {
                 std::ofstream sout("./res/state");
                 for(double &x: state)
                     sout << x << "\n";
                 sout << action;
                 sout.close();
-            }
-            else {
-                double diff = (env[ticker][TICKER][t+1] - env[ticker][TICKER][t]) / env[ticker][TICKER][t];
-                benchmark *= 1.00 + diff;
-                model *= 1.00 + diff * action_space[action];
-                out << benchmark << " " << model << " " << action << "\n";
+
+                action_count[action]++;
             }
         }
 
         out.close();
-        std::system(("./python/run.py " + ticker).c_str());
+        std::system(("./python/run.py " + ticker).c_str()); // output recent performance
     }
+
+    std::cout << std::fixed;
+    std::cout.precision(2);
+
+    std::cout << "BENCHMARK DAILY P&L = " << benchmark_daily / tickers.size() * 100 << "%\n";
+    std::cout << "    MODEL DAILY P&L = " << model_daily / tickers.size() * 100 << "%\n\n";
+
+    std::cout << "Action (0) - Short: " << (double)action_count[0] * 100 / tickers.size() << "%\n";
+    std::cout << "Action (1) - Idle : " << (double)action_count[1] * 100 / tickers.size() << "%\n";
+    std::cout << "Action (2) - Long : " << (double)action_count[2] * 100 / tickers.size() << "%\n";
 }
 
 void Quant::save() {
