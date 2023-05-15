@@ -234,8 +234,8 @@ void Quant::test(std::vector<std::string> &tickers, Environment &env) {
 }
 
 void Quant::run(std::vector<std::string> &tickers, Environment &env) {
+    double model_daily = 0.00;
     std::vector<int> action_count = {0, 0, 0};
-    double benchmark_daily = 0.00, model_daily = 0.00;
     for(std::string &ticker: tickers) {
         unsigned int start = env[ticker][TICKER].size() - 252;
         unsigned int terminal = env[ticker][TICKER].size() - 1;
@@ -253,10 +253,8 @@ void Quant::run(std::vector<std::string> &tickers, Environment &env) {
                 model *= 1.00 + diff * action_space[action];
                 out << benchmark << " " << model << " " << action << "\n";
 
-                if(t == terminal - 1) {
-                    benchmark_daily += diff;
+                if(t == terminal - 1)
                     model_daily += diff * action_space[action];
-                }
             }
             else {
                 std::ofstream sout("./res/state");
@@ -275,10 +273,7 @@ void Quant::run(std::vector<std::string> &tickers, Environment &env) {
 
     std::cout << std::fixed;
     std::cout.precision(2);
-
-    std::cout << "BENCHMARK DAILY P&L = " << benchmark_daily / tickers.size() * 100 << "%\n";
     std::cout << "    MODEL DAILY P&L = " << model_daily / tickers.size() * 100 << "%\n\n";
-
     std::cout << "Action (0) - Short: " << (double)action_count[0] * 100 / tickers.size() << "%\n";
     std::cout << "Action (1) - Idle : " << (double)action_count[1] * 100 / tickers.size() << "%\n";
     std::cout << "Action (2) - Long : " << (double)action_count[2] * 100 / tickers.size() << "%\n";
