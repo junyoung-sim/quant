@@ -1,0 +1,10 @@
+# Hello! Thanks for great code examples Junyoung-Sum
+# Was not sure how to comment or contact you but you can reach me at cnash@datasprings.com or 720-481-8485 (telegram/whatsapp).
+# I was hoping I could help assist with any possible future updates
+# I am planning / wanting to fork this project and create a few options
+#--------------------------------------------------------------------------------------------------------------------
+# Todo: Thinks I plan to help / assist or code.
+# 1. Plan to modify query for pulling stock info to possibly be intraday... such as 1 min/5min or maybe even less...  
+# initially this would require changes to the model since the json data/columns returned is different but helpful for intrday.
+# 2. Add ability to pull code via API request... So when executing against the RUN command, it can return the current trade direction (flat/long/short).
+# 3. Once functioning via a console app with API Web requests for a decision on long/short/flat... The next step would be to add to the Alpaca API with a paper account. 
